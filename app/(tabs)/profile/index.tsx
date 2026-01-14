@@ -3,27 +3,27 @@
  * Shows user stats, badges, and account information
  */
 
-import React, { useState } from 'react'
-import {
-  View,
-  StyleSheet,
-  ScrollView,
-  RefreshControl,
-  TouchableOpacity,
-  Alert,
-} from 'react-native'
-import { useRouter } from 'expo-router'
-import { useMobileWallet } from '@wallet-ui/react-native-web3js'
-import { PublicKey } from '@solana/web3.js'
+import { useGetBalance } from '@/components/account/use-get-balance'
 import { AppPage } from '@/components/app-page'
 import { AppText } from '@/components/app-text'
-import { Colors, BadgeColors, TierColors } from '@/constants/colors'
 import { useChallenge } from '@/components/challenge/challenge-provider'
-import { useMintBadge, formatMintFee } from '@/components/challenge/use-mint-badge'
-import { useGetBalance } from '@/components/account/use-get-balance'
-import { getChallengeById } from '@/constants/challenges'
+import { formatMintFee, useMintBadge } from '@/components/challenge/use-mint-badge'
 import { UiIconSymbol } from '@/components/ui/ui-icon-symbol'
+import { getChallengeById } from '@/constants/challenges'
+import { BadgeColors, Colors, TierColors } from '@/constants/colors'
 import { ellipsify } from '@/utils/ellipsify'
+import { PublicKey } from '@solana/web3.js'
+import { useMobileWallet } from '@wallet-ui/react-native-web3js'
+import { useRouter } from 'expo-router'
+import React, { useState } from 'react'
+import {
+  Alert,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native'
 
 export default function ProfileScreen() {
   const router = useRouter()
@@ -39,7 +39,16 @@ export default function ProfileScreen() {
     refreshProgress,
   } = useChallenge()
 
-  const address = account?.address ? new PublicKey(account.address) : null
+  // Safely create PublicKey from address
+  const address = React.useMemo(() => {
+    if (!account?.address) return null
+    try {
+      return new PublicKey(account.address)
+    } catch {
+      console.warn('Invalid wallet address:', account.address)
+      return null
+    }
+  }, [account?.address])
   const { data: balance } = useGetBalance({ address: address! })
   const mintBadge = useMintBadge({ address: address! })
 
