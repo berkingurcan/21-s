@@ -1,12 +1,12 @@
-import { router } from 'expo-router'
-import { useAuth } from '@/components/auth/auth-provider'
 import { AppText } from '@/components/app-text'
 import { AppView } from '@/components/app-view'
+import { useAuth } from '@/components/auth/auth-provider'
+import { UiIconSymbol } from '@/components/ui/ui-icon-symbol'
 import { AppConfig } from '@/constants/app-config'
 import { Colors } from '@/constants/colors'
+import { router } from 'expo-router'
+import { ActivityIndicator, Image, StyleSheet, TouchableOpacity, View } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { ActivityIndicator, View, StyleSheet, TouchableOpacity } from 'react-native'
-import { UiIconSymbol } from '@/components/ui/ui-icon-symbol'
 
 export default function SignIn() {
   const { signIn, isLoading } = useAuth()
@@ -41,7 +41,10 @@ export default function SignIn() {
           <View style={styles.brandingContainer}>
             {/* App Icon/Logo */}
             <View style={[styles.logoContainer, { backgroundColor: colors.accentGlow }]}>
-              <UiIconSymbol name="flame.fill" size={64} color={colors.accent} />
+              <Image
+                source={require('@/assets/images/logo.png')}
+                style={{ width: '100%', height: '100%', borderRadius: 30 }}
+              />
             </View>
 
             {/* App Name */}
