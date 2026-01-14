@@ -1,9 +1,9 @@
+import { UiIconSymbol } from '@/components/ui/ui-icon-symbol'
+import { Colors } from '@/constants/colors'
 import { Tabs } from 'expo-router'
 import React from 'react'
 import { Platform } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { UiIconSymbol } from '@/components/ui/ui-icon-symbol'
-import { Colors } from '@/constants/colors'
 
 export default function TabLayout() {
   const colors = Colors.dark
@@ -77,7 +77,15 @@ export default function TabLayout() {
       />
 
       {/* Hide old tabs */}
-      <Tabs.Screen name="challenges" options={{ href: null }} />
+      <Tabs.Screen
+        name="challenges"
+        options={{
+          title: 'Challenges',
+          tabBarIcon: ({ color }) => (
+            <UiIconSymbol size={26} name="list.bullet.rectangle.fill" color={color} />
+          ),
+        }}
+      />
       <Tabs.Screen name="settings" options={{ href: null }} />
       <Tabs.Screen name="demo" options={{ href: null }} />
       <Tabs.Screen name="account" options={{ href: null }} />
