@@ -11,7 +11,7 @@ import { formatMintFee, useMintBadge } from '@/components/challenge/use-mint-bad
 import { UiIconSymbol } from '@/components/ui/ui-icon-symbol'
 import { getMintFeeForDay } from '@/constants/challenges'
 import { Colors } from '@/constants/colors'
-import { PublicKey } from '@solana/web3.js'
+import { getPublicKeyFromAccount } from '@/utils/base64-to-publickey'
 import { useMobileWallet } from '@wallet-ui/react-native-web3js'
 import { useRouter } from 'expo-router'
 import React, { useMemo, useState } from 'react'
@@ -52,14 +52,9 @@ export default function HomeScreen() {
   const [isCompleting, setIsCompleting] = useState(false)
   const [isMinting, setIsMinting] = useState(false)
 
-  // Safely create PublicKey from address
+  // Safely create PublicKey from address (handles Base64 from Solana Mobile)
   const address = useMemo(() => {
-    if (!account?.address) return null
-    try {
-      return new PublicKey(account.address)
-    } catch {
-      return null
-    }
+    return getPublicKeyFromAccount(account)
   }, [account?.address])
 
   const { data: balance } = useGetBalance({ address: address! })

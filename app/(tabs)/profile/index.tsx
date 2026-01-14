@@ -11,8 +11,8 @@ import { formatMintFee, useMintBadge } from '@/components/challenge/use-mint-bad
 import { UiIconSymbol } from '@/components/ui/ui-icon-symbol'
 import { getDayChallenge, getMintFeeForDay } from '@/constants/challenges'
 import { Colors } from '@/constants/colors'
+import { getPublicKeyFromAccount } from '@/utils/base64-to-publickey'
 import { ellipsify } from '@/utils/ellipsify'
-import { PublicKey } from '@solana/web3.js'
 import { useMobileWallet } from '@wallet-ui/react-native-web3js'
 import { useRouter } from 'expo-router'
 import React, { useMemo, useState } from 'react'
@@ -39,15 +39,9 @@ export default function ProfileScreen() {
     isDayMinted,
   } = useChallenge()
 
-  // Safely create PublicKey from address
+  // Safely create PublicKey from address (handles Base64 from Solana Mobile)
   const address = useMemo(() => {
-    if (!account?.address) return null
-    try {
-      return new PublicKey(account.address)
-    } catch {
-      console.warn('Invalid wallet address:', account.address)
-      return null
-    }
+    return getPublicKeyFromAccount(account)
   }, [account?.address])
 
   const { data: balance } = useGetBalance({ address: address! })
