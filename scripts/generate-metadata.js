@@ -175,15 +175,14 @@ if (!fs.existsSync(outputDir)) {
 console.log(`Generating ${CHALLENGES.length} metadata files in ${outputDir}...`);
 
 CHALLENGES.forEach(challenge => {
-    // Placeholder image CID - USER MUST REPLACE THIS AFTER UPLOADING IMAGES
-    // OR set specific CIDs if known
-    const imageCid = "REPLACE_WITH_IMAGE_CID";
+    // Image URI provided by user
+    const imageUri = "https://rose-smoggy-sparrow-317.mypinata.cloud/ipfs/bafkreifj4vs3seufsrygd7fmsbx2vusbi57jbr56m5judn3qnj5bdsr3cu";
 
     const metadata = {
         name: challenge.badgeName,
         symbol: "21S",
         description: challenge.description,
-        image: `https://ipfs.io/ipfs/${imageCid}`, // Placeholder
+        image: imageUri,
         external_url: "https://21-s.app",
         attributes: [
             {
@@ -206,7 +205,7 @@ CHALLENGES.forEach(challenge => {
         properties: {
             files: [
                 {
-                    uri: `https://ipfs.io/ipfs/${imageCid}`,
+                    uri: imageUri,
                     type: "image/png"
                 }
             ],
@@ -219,7 +218,6 @@ CHALLENGES.forEach(challenge => {
             ]
         }
     };
-
     const fileName = `day${challenge.day}.json`;
     fs.writeFileSync(path.join(outputDir, fileName), JSON.stringify(metadata, null, 2));
     console.log(`Created ${fileName}`);

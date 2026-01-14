@@ -2,7 +2,7 @@
   "name": "Day 4: Small Talk",
   "symbol": "21S",
   "description": "Started casual conversations from observations",
-  "image": "https://ipfs.io/ipfs/REPLACE_WITH_IMAGE_CID",
+  "image": "https://rose-smoggy-sparrow-317.mypinata.cloud/ipfs/bafkreifj4vs3seufsrygd7fmsbx2vusbi57jbr56m5judn3qnj5bdsr3cu",
   "external_url": "https://21-s.app",
   "attributes": [
     {
@@ -25,7 +25,7 @@
   "properties": {
     "files": [
       {
-        "uri": "https://ipfs.io/ipfs/REPLACE_WITH_IMAGE_CID",
+        "uri": "https://rose-smoggy-sparrow-317.mypinata.cloud/ipfs/bafkreifj4vs3seufsrygd7fmsbx2vusbi57jbr56m5judn3qnj5bdsr3cu",
         "type": "image/png"
       }
     ],
