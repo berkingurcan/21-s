@@ -1,0 +1,40 @@
+{
+  "name": "Day 18: Spontaneous",
+  "symbol": "21S",
+  "description": "Created instant date opportunities",
+  "image": "https://ipfs.io/ipfs/REPLACE_WITH_IMAGE_CID",
+  "external_url": "https://21-s.app",
+  "attributes": [
+    {
+      "trait_type": "Day",
+      "value": "18"
+    },
+    {
+      "trait_type": "Challenge",
+      "value": "The Instant Date"
+    },
+    {
+      "trait_type": "Difficulty",
+      "value": "Advanced"
+    },
+    {
+      "trait_type": "Mint Fee",
+      "value": "0.0625 SOL"
+    }
+  ],
+  "properties": {
+    "files": [
+      {
+        "uri": "https://ipfs.io/ipfs/REPLACE_WITH_IMAGE_CID",
+        "type": "image/png"
+      }
+    ],
+    "category": "image",
+    "creators": [
+      {
+        "address": "d29KQE5Gw3dY6qDEvFvmfp4bCr4kUWZm4EnGojUfiZb",
+        "share": 100
+      }
+    ]
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "name": "Day 6: Spreading Positivity",
+  "symbol": "21S",
+  "description": "Made others feel good with genuine compliments",
+  "image": "https://ipfs.io/ipfs/REPLACE_WITH_IMAGE_CID",
+  "external_url": "https://21-s.app",
+  "attributes": [
+    {
+      "trait_type": "Day",
+      "value": "6"
+    },
+    {
+      "trait_type": "Challenge",
+      "value": "The Complimenter"
+    },
+    {
+      "trait_type": "Difficulty",
+      "value": "Beginner"
+    },
+    {
+      "trait_type": "Mint Fee",
+      "value": "0.0325 SOL"
+    }
+  ],
+  "properties": {
+    "files": [
+      {
+        "uri": "https://ipfs.io/ipfs/REPLACE_WITH_IMAGE_CID",
+        "type": "image/png"
+      }
+    ],
+    "category": "image",
+    "creators": [
+      {
+        "address": "d29KQE5Gw3dY6qDEvFvmfp4bCr4kUWZm4EnGojUfiZb",
+        "share": 100
+      }
+    ]
+  }
+}

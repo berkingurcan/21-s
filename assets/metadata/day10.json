@@ -1,0 +1,40 @@
+{
+  "name": "Day 10: Valuing Input",
+  "symbol": "21S",
+  "description": "Engaged others for their perspectives",
+  "image": "https://ipfs.io/ipfs/REPLACE_WITH_IMAGE_CID",
+  "external_url": "https://21-s.app",
+  "attributes": [
+    {
+      "trait_type": "Day",
+      "value": "10"
+    },
+    {
+      "trait_type": "Challenge",
+      "value": "The Opinion Seeker"
+    },
+    {
+      "trait_type": "Difficulty",
+      "value": "Intermediate"
+    },
+    {
+      "trait_type": "Mint Fee",
+      "value": "0.0425 SOL"
+    }
+  ],
+  "properties": {
+    "files": [
+      {
+        "uri": "https://ipfs.io/ipfs/REPLACE_WITH_IMAGE_CID",
+        "type": "image/png"
+      }
+    ],
+    "category": "image",
+    "creators": [
+      {
+        "address": "d29KQE5Gw3dY6qDEvFvmfp4bCr4kUWZm4EnGojUfiZb",
+        "share": 100
+      }
+    ]
+  }
+}

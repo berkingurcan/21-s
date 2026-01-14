@@ -131,8 +131,8 @@ export const DAILY_CHALLENGES: DailyChallenge[] = [
   {
     day: 8,
     title: 'The Recommender',
-    task: 'Ask 3 people for a recommendation (coffee spot, restaurant, etc.)',
-    tip: '"Hey, do you know any good coffee places around here?" Start friendly.',
+    task: 'Ask 3 girls for a recommendation (coffee spot, restaurant, etc.). Continue the conversation and invite.',
+    tip: '"Hey, do you know any good coffee places around here?" Start friendly. And then try to continue the conversation. Then, invite them to the place. Or ask them to join you.',
     mintFee: getMintFeeForDay(8),
     badge: {
       name: 'Day 8: Seeking Advice',

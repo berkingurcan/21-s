@@ -1,0 +1,40 @@
+{
+  "name": "Day 9: Breaking the Ice",
+  "symbol": "21S",
+  "description": "Started introducing yourself proactively",
+  "image": "https://ipfs.io/ipfs/REPLACE_WITH_IMAGE_CID",
+  "external_url": "https://21-s.app",
+  "attributes": [
+    {
+      "trait_type": "Day",
+      "value": "9"
+    },
+    {
+      "trait_type": "Challenge",
+      "value": "The Introducer"
+    },
+    {
+      "trait_type": "Difficulty",
+      "value": "Intermediate"
+    },
+    {
+      "trait_type": "Mint Fee",
+      "value": "0.04 SOL"
+    }
+  ],
+  "properties": {
+    "files": [
+      {
+        "uri": "https://ipfs.io/ipfs/REPLACE_WITH_IMAGE_CID",
+        "type": "image/png"
+      }
+    ],
+    "category": "image",
+    "creators": [
+      {
+        "address": "d29KQE5Gw3dY6qDEvFvmfp4bCr4kUWZm4EnGojUfiZb",
+        "share": 100
+      }
+    ]
+  }
+}

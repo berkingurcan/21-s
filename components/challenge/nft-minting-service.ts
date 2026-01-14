@@ -5,6 +5,11 @@
 
 import { DailyChallenge } from '@/types/challenges'
 import {
+    createCreateMasterEditionV3Instruction,
+    createCreateMetadataAccountV3Instruction,
+    PROGRAM_ID as TOKEN_METADATA_PROGRAM_ID,
+} from '@metaplex-foundation/mpl-token-metadata'
+import {
     createAssociatedTokenAccountInstruction,
     createInitializeMintInstruction,
     createMintToInstruction,
@@ -43,13 +48,42 @@ export interface NFTMintParams {
     mintFee: number
 }
 
+// Helper to find Metadata PDA
+function findMetadataPda(mint: PublicKey): PublicKey {
+    const [pda] = PublicKey.findProgramAddressSync(
+        [
+            Buffer.from('metadata'),
+            TOKEN_METADATA_PROGRAM_ID.toBuffer(),
+            mint.toBuffer(),
+        ],
+        TOKEN_METADATA_PROGRAM_ID
+    )
+    return pda
+}
+
+// Helper to find Master Edition PDA
+function findMasterEditionPda(mint: PublicKey): PublicKey {
+    const [pda] = PublicKey.findProgramAddressSync(
+        [
+            Buffer.from('metadata'),
+            TOKEN_METADATA_PROGRAM_ID.toBuffer(),
+            mint.toBuffer(),
+            Buffer.from('edition'),
+        ],
+        TOKEN_METADATA_PROGRAM_ID
+    )
+    return pda
+}
+
 /**
  * Build the transaction for minting an NFT badge
  * This creates:
  * 1. A new mint account (the NFT)
  * 2. An associated token account for the user
  * 3. Mints 1 token to the user (making it an NFT)
- * 4. Transfers the mint fee to treasury
+ * 4. Creates Metaplex Metadata for the mint
+ * 5. Creates Master Edition (limiting supply to 1)
+ * 6. Transfers the mint fee to treasury
  */
 export async function buildNFTMintTransaction({
     connection,
@@ -81,6 +115,10 @@ export async function buildNFTMintTransaction({
         value: latestBlockhash,
     } = await connection.getLatestBlockhashAndContext()
 
+    // Find PDAs
+    const metadataPDA = findMetadataPda(mintKeypair.publicKey)
+    const masterEditionPDA = findMasterEditionPda(mintKeypair.publicKey)
+
     // Build the transaction with all instructions
     const transaction = new Transaction()
 
@@ -101,7 +139,7 @@ export async function buildNFTMintTransaction({
             mintKeypair.publicKey,
             0, // 0 decimals for NFT
             payer, // Mint authority
-            null // No freeze authority
+            payer // Freeze authority (needed for Master Edition)
         )
     )
 
@@ -125,7 +163,63 @@ export async function buildNFTMintTransaction({
         )
     )
 
-    // 5. Transfer mint fee to treasury
+    // 5. Create Metaplex Metadata
+    const metadataUri = `https://21-s.app/badges/metadata/day${challenge.day}.json`
+
+    transaction.add(
+        createCreateMetadataAccountV3Instruction(
+            {
+                metadata: metadataPDA,
+                mint: mintKeypair.publicKey,
+                mintAuthority: payer,
+                payer: payer,
+                updateAuthority: payer,
+            },
+            {
+                createMetadataAccountArgsV3: {
+                    data: {
+                        name: challenge.badge.name,
+                        symbol: APP_SYMBOL,
+                        uri: metadataUri,
+                        sellerFeeBasisPoints: 500, // 5%
+                        creators: [
+                            {
+                                address: TREASURY_WALLET,
+                                verified: false,
+                                share: 100,
+                            },
+                        ],
+                        collection: null,
+                        uses: null,
+                    },
+                    isMutable: true,
+                    collectionDetails: null,
+                },
+            }
+        )
+    )
+
+    // 6. Create Master Edition
+    transaction.add(
+        createCreateMasterEditionV3Instruction(
+            {
+                edition: masterEditionPDA,
+                mint: mintKeypair.publicKey,
+                updateAuthority: payer,
+                mintAuthority: payer,
+                payer: payer,
+                metadata: metadataPDA,
+                tokenProgram: TOKEN_PROGRAM_ID,
+            },
+            {
+                createMasterEditionArgs: {
+                    maxSupply: 0,
+                },
+            }
+        )
+    )
+
+    // 7. Transfer mint fee to treasury
     transaction.add(
         SystemProgram.transfer({
             fromPubkey: payer,
@@ -152,6 +246,7 @@ export async function buildNFTMintTransaction({
 
 /**
  * Generate Metaplex-compatible metadata for the badge
+ * This uses the structure expected by the JSON standard
  */
 export function generateBadgeMetadata(
     challenge: DailyChallenge,
