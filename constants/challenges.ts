@@ -102,8 +102,8 @@ export const DAILY_CHALLENGES: DailyChallenge[] = [
   {
     day: 6,
     title: 'The Complimenter',
-    task: 'Give genuine compliments to 3 strangers on something they chose',
-    tip: 'Compliment choices not body: "Nice shoes" "Cool jacket" "Great bag"',
+    task: 'Give genuine compliments to 3 girls on something they chose',
+    tip: 'Compliment choices not body: "Nice shoes" "Cool jacket where did you buy it? Im gonna buy this for my gf" "Great bag"',
     mintFee: getMintFeeForDay(6),
     badge: {
       name: 'Day 6: Spreading Positivity',
@@ -114,7 +114,7 @@ export const DAILY_CHALLENGES: DailyChallenge[] = [
   {
     day: 7,
     title: 'The Extender',
-    task: 'Have one conversation that goes beyond initial greeting (2+ exchanges)',
+    task: 'Have one conversation that goes beyond initial opening with 3 people',
     tip: 'After they respond, ask a follow-up question or share something related.',
     mintFee: getMintFeeForDay(7),
     badge: {
