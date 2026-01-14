@@ -4,7 +4,7 @@
     "slug": "21-s",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/images/logo.png",
     "scheme": "twentyones",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
@@ -14,7 +14,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/logo.png",
         "backgroundColor": "#0A0A0F"
       },
       "edgeToEdgeEnabled": true,
@@ -33,9 +33,9 @@
           "backgroundColor": "#0A0A0F",
           "dark": {
             "backgroundColor": "#0A0A0F",
-            "image": "./assets/images/splash-icon.png"
+            "image": "./assets/images/logo.png"
           },
-          "image": "./assets/images/splash-icon.png",
+          "image": "./assets/images/logo.png",
           "imageWidth": 200,
           "resizeMode": "contain"
         }
