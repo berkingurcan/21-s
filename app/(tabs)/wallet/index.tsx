@@ -3,27 +3,27 @@
  * Shows balance, tokens, and wallet actions
  */
 
-import React, { useState, useCallback } from 'react'
-import {
-  View,
-  StyleSheet,
-  ScrollView,
-  RefreshControl,
-  TouchableOpacity,
-} from 'react-native'
-import { useRouter } from 'expo-router'
-import { useMobileWallet } from '@wallet-ui/react-native-web3js'
-import { PublicKey } from '@solana/web3.js'
-import { AppPage } from '@/components/app-page'
-import { AppText } from '@/components/app-text'
-import { Colors } from '@/constants/colors'
 import { useGetBalance, useGetBalanceInvalidate } from '@/components/account/use-get-balance'
 import { useGetTokenAccounts, useGetTokenAccountsInvalidate } from '@/components/account/use-get-token-accounts'
-import { useCluster } from '@/components/cluster/cluster-provider'
+import { AppPage } from '@/components/app-page'
+import { AppText } from '@/components/app-text'
 import { ClusterNetwork } from '@/components/cluster/cluster-network'
+import { useCluster } from '@/components/cluster/cluster-provider'
 import { UiIconSymbol } from '@/components/ui/ui-icon-symbol'
+import { Colors } from '@/constants/colors'
 import { ellipsify } from '@/utils/ellipsify'
 import { lamportsToSol } from '@/utils/lamports-to-sol'
+import { PublicKey } from '@solana/web3.js'
+import { useMobileWallet } from '@wallet-ui/react-native-web3js'
+import { useRouter } from 'expo-router'
+import React, { useCallback, useState } from 'react'
+import {
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native'
 
 export default function WalletScreen() {
   const router = useRouter()
@@ -31,7 +31,16 @@ export default function WalletScreen() {
   const { account } = useMobileWallet()
   const { selectedCluster } = useCluster()
 
-  const address = account?.address ? new PublicKey(account.address) : null
+  // Safely create PublicKey from address
+  const address = React.useMemo(() => {
+    if (!account?.address) return null
+    try {
+      return new PublicKey(account.address)
+    } catch {
+      console.warn('Invalid wallet address:', account.address)
+      return null
+    }
+  }, [account?.address])
   const { data: balance, isLoading: balanceLoading } = useGetBalance({
     address: address!,
   })

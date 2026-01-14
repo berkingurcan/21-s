@@ -15,6 +15,7 @@ import { useRouter } from 'expo-router'
 import React, { useState } from 'react'
 import {
   Dimensions,
+  Image,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -104,7 +105,11 @@ export default function HomeScreen() {
             />
 
             <View style={styles.logoContainer}>
-              <UiIconSymbol name="flame.fill" size={56} color={colors.accent} />
+              <Image
+                source={require('@/assets/images/logo.png')}
+                style={styles.logoImage}
+                resizeMode="contain"
+              />
             </View>
 
             <AppText style={styles.heroTitle}>
@@ -477,6 +482,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
+  },
+  logoImage: {
+    width: 60,
+    height: 60,
   },
   heroTitle: {
     fontSize: 36,
