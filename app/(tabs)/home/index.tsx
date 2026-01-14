@@ -11,10 +11,10 @@ import { formatMintFee, useMintBadge } from '@/components/challenge/use-mint-bad
 import { UiIconSymbol } from '@/components/ui/ui-icon-symbol'
 import { getMintFeeForDay } from '@/constants/challenges'
 import { Colors } from '@/constants/colors'
-import { getPublicKeyFromAccount } from '@/utils/base64-to-publickey'
+// Removed getPublicKeyFromAccount - using account.publicKey directly
 import { useMobileWallet } from '@wallet-ui/react-native-web3js'
 import { useRouter } from 'expo-router'
-import React, { useMemo, useState } from 'react'
+import React, { useState } from 'react'
 import {
   Alert,
   Dimensions,
@@ -52,10 +52,8 @@ export default function HomeScreen() {
   const [isCompleting, setIsCompleting] = useState(false)
   const [isMinting, setIsMinting] = useState(false)
 
-  // Safely create PublicKey from address (handles Base64 from Solana Mobile)
-  const address = useMemo(() => {
-    return getPublicKeyFromAccount(account)
-  }, [account?.address])
+  // Use account.publicKey directly - this is the correct wallet address
+  const address = account?.publicKey ?? null
 
   const { data: balance } = useGetBalance({ address: address! })
   const mintBadge = useMintBadge({ address: address! })

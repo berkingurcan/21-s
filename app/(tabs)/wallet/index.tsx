@@ -11,7 +11,7 @@ import { ClusterNetwork } from '@/components/cluster/cluster-network'
 import { useCluster } from '@/components/cluster/cluster-provider'
 import { UiIconSymbol } from '@/components/ui/ui-icon-symbol'
 import { Colors } from '@/constants/colors'
-import { getPublicKeyFromAccount } from '@/utils/base64-to-publickey'
+// Removed getPublicKeyFromAccount - using account.publicKey directly
 import { ellipsify } from '@/utils/ellipsify'
 import { lamportsToSol } from '@/utils/lamports-to-sol'
 import { useMobileWallet } from '@wallet-ui/react-native-web3js'
@@ -31,10 +31,8 @@ export default function WalletScreen() {
   const { account } = useMobileWallet()
   const { selectedCluster } = useCluster()
 
-  // Safely create PublicKey from address (handles Base64 from Solana Mobile)
-  const address = React.useMemo(() => {
-    return getPublicKeyFromAccount(account)
-  }, [account?.address])
+  // Use account.publicKey directly - this is the correct wallet address
+  const address = account?.publicKey ?? null
   const { data: balance, isLoading: balanceLoading } = useGetBalance({
     address: address!,
   })
