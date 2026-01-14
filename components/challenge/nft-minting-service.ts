@@ -164,7 +164,7 @@ export async function buildNFTMintTransaction({
     )
 
     // 5. Create Metaplex Metadata
-    const metadataUri = `https://21-s.app/badges/metadata/day${challenge.day}.json`
+    const metadataUri = `https://rose-smoggy-sparrow-317.mypinata.cloud/ipfs/bafybeigdhebjqstwyzrfmgzy6nidhii5fw2gg7xtewkrgc7qbkgao32fnm/day${challenge.day}.json`
 
     transaction.add(
         createCreateMetadataAccountV3Instruction(
@@ -257,7 +257,7 @@ export function generateBadgeMetadata(
         name: challenge.badge.name,
         symbol: APP_SYMBOL,
         description: challenge.badge.description,
-        image: `https://21-s.app/badges/day${challenge.day}.png`,
+        image: `https://rose-smoggy-sparrow-317.mypinata.cloud/ipfs/bafkreifj4vs3seufsrygd7fmsbx2vusbi57jbr56m5judn3qnj5bdsr3cu`,
         external_url: 'https://21-s.app',
         attributes: [
             { trait_type: 'Day', value: challenge.day.toString() },
@@ -269,7 +269,7 @@ export function generateBadgeMetadata(
         properties: {
             files: [
                 {
-                    uri: `https://21-s.app/badges/day${challenge.day}.png`,
+                    uri: `https://rose-smoggy-sparrow-317.mypinata.cloud/ipfs/bafkreifj4vs3seufsrygd7fmsbx2vusbi57jbr56m5judn3qnj5bdsr3cu`,
                     type: 'image/png',
                 },
             ],
