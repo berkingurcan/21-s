@@ -74,10 +74,19 @@ export default function WalletScreen() {
         }
       >
         {/* Header */}
+        {/* Header */}
         <View style={styles.header}>
-          <AppText type="title" style={{ color: colors.text }}>
-            Wallet
-          </AppText>
+          <View style={styles.headerLeft}>
+            <TouchableOpacity
+              onPress={() => router.push('/(tabs)/home')}
+              style={[styles.backButton, { backgroundColor: colors.surface }]}
+            >
+              <UiIconSymbol name="chevron.left" size={20} color={colors.text} />
+            </TouchableOpacity>
+            <AppText type="title" style={{ color: colors.text }}>
+              Wallet
+            </AppText>
+          </View>
           <View style={[styles.networkBadge, { backgroundColor: colors.surface }]}>
             <View
               style={[
@@ -246,6 +255,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 20,
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  backButton: {
+    padding: 10,
+    borderRadius: 12,
   },
   networkBadge: {
     flexDirection: 'row',

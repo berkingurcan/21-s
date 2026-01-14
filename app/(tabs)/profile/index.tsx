@@ -129,7 +129,14 @@ export default function ProfileScreen() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <View>
+          <TouchableOpacity
+            onPress={() => router.push('/(tabs)/home')}
+            style={[styles.backButton, { backgroundColor: colors.surface }]}
+          >
+            <UiIconSymbol name="chevron.left" size={20} color={colors.text} />
+          </TouchableOpacity>
+
+          <View style={styles.headerTitleContainer}>
             <AppText type="title" style={{ color: colors.text }}>
               Profile
             </AppText>
@@ -337,8 +344,17 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     marginBottom: 20,
+    gap: 12,
+  },
+  backButton: {
+    padding: 12,
+    borderRadius: 12,
+  },
+  headerTitleContainer: {
+    flex: 1,
+    justifyContent: 'center',
   },
   walletAddress: {
     fontSize: 14,

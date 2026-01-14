@@ -475,17 +475,15 @@ const styles = StyleSheet.create({
     borderRadius: 100,
   },
   logoContainer: {
-    width: 100,
-    height: 100,
-    borderRadius: 28,
-    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+    width: 140,
+    height: 140,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 16,
   },
   logoImage: {
-    width: 60,
-    height: 60,
+    width: '100%',
+    height: '100%',
   },
   heroTitle: {
     fontSize: 36,

@@ -3,22 +3,24 @@
  * Browse and select challenges by tier
  */
 
-import React, { useState } from 'react'
-import {
-  View,
-  StyleSheet,
-  ScrollView,
-  RefreshControl,
-  TouchableOpacity,
-} from 'react-native'
-import { useRouter } from 'expo-router'
 import { AppPage } from '@/components/app-page'
 import { AppText } from '@/components/app-text'
-import { Colors, TierColors } from '@/constants/colors'
-import { useChallenge } from '@/components/challenge/challenge-provider'
 import { ChallengeCard } from '@/components/challenge/challenge-card'
-import { ChallengeTier } from '@/types/challenges'
+import { useChallenge } from '@/components/challenge/challenge-provider'
 import { getChallengesByTier } from '@/constants/challenges'
+import { Colors, TierColors } from '@/constants/colors'
+import { ChallengeTier } from '@/types/challenges'
+import { useRouter } from 'expo-router'
+import React, { useState } from 'react'
+import {
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native'
+
+import { UiIconSymbol } from '@/components/ui/ui-icon-symbol'
 
 const TIERS: ChallengeTier[] = ['beginner', 'intermediate', 'advanced', 'master']
 
@@ -84,7 +86,20 @@ export default function ChallengesScreen() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <AppText type="title" style={{ color: colors.text }}>
+          <TouchableOpacity
+            onPress={() => router.push('/(tabs)/home')}
+            style={styles.backButton}
+          >
+            <UiIconSymbol
+              name="chevron.left"
+              size={20}
+              color={colors.textMuted}
+            />
+            <AppText style={[styles.backText, { color: colors.textMuted }]}>
+              Home
+            </AppText>
+          </TouchableOpacity>
+          <AppText type="title" style={{ color: colors.text, marginTop: 12 }}>
             Challenges
           </AppText>
           <AppText style={[styles.subtitle, { color: colors.textMuted }]}>
@@ -265,6 +280,18 @@ export default function ChallengesScreen() {
 const styles = StyleSheet.create({
   header: {
     marginBottom: 16,
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 4,
+    marginLeft: -4, // compensate for padding
+    alignSelf: 'flex-start',
+  },
+  backText: {
+    fontSize: 15,
+    fontWeight: '500',
   },
   subtitle: {
     fontSize: 15,
