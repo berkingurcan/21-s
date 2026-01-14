@@ -150,7 +150,7 @@ export function MintSuccessModal({
                                     style={[
                                         styles.trophyGlow,
                                         {
-                                            backgroundColor: colors.warning,
+                                            backgroundColor: colors.gold,
                                             opacity: glowOpacity,
                                         },
                                     ]}
@@ -159,7 +159,7 @@ export function MintSuccessModal({
                                     <UiIconSymbol
                                         name="trophy.fill"
                                         size={72}
-                                        color={colors.warning}
+                                        color={colors.gold}
                                     />
                                 </Animated.View>
                             </View>

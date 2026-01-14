@@ -133,7 +133,7 @@ export default function ProfileScreen() {
               Profile
             </AppText>
             <AppText style={[styles.walletAddress, { color: colors.textMuted }]}>
-              {account?.address ? ellipsify(account.address, 8) : 'Not connected'}
+              {address ? ellipsify(address.toBase58(), 8) : 'Not connected'}
             </AppText>
           </View>
           <View style={styles.headerActions}>
@@ -172,7 +172,7 @@ export default function ProfileScreen() {
             </AppText>
           </View>
           <View style={[styles.statCard, { backgroundColor: colors.surface }]}>
-            <AppText style={[styles.statValue, { color: colors.warning }]}>
+            <AppText style={[styles.statValue, { color: colors.gold }]}>
               {stats.currentStreak}
             </AppText>
             <AppText style={[styles.statLabel, { color: colors.textMuted }]}>
@@ -195,12 +195,6 @@ export default function ProfileScreen() {
             <AppText style={{ color: colors.textMuted }}>Longest Streak</AppText>
             <AppText style={{ color: colors.text, fontWeight: '700' }}>
               {stats.longestStreak} days
-            </AppText>
-          </View>
-          <View style={styles.extendedStatRow}>
-            <AppText style={{ color: colors.textMuted }}>SOL Spent on Badges</AppText>
-            <AppText style={{ color: colors.accent, fontWeight: '700' }}>
-              {stats.totalSOLSpent.toFixed(4)} SOL
             </AppText>
           </View>
         </View>
@@ -229,7 +223,7 @@ export default function ProfileScreen() {
                 ]}
                 activeOpacity={0.8}
               >
-                <UiIconSymbol name="trophy.fill" size={32} color={colors.warning} />
+                <UiIconSymbol name="trophy.fill" size={32} color={colors.gold} />
                 <View style={{ flex: 1 }}>
                   <AppText style={{ color: colors.text, fontWeight: '700' }}>
                     {challenge.badge.name}
@@ -273,7 +267,7 @@ export default function ProfileScreen() {
                       },
                     ]}
                   >
-                    <UiIconSymbol name="trophy.fill" size={36} color={colors.warning} />
+                    <UiIconSymbol name="trophy.fill" size={36} color={colors.gold} />
                     <AppText
                       style={[styles.badgeName, { color: colors.text }]}
                       numberOfLines={2}

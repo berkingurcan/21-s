@@ -40,7 +40,7 @@ export default function BadgesScreen() {
                     },
                   ]}
                 >
-                  <UiIconSymbol name="trophy.fill" size={48} color={colors.warning} />
+                  <UiIconSymbol name="trophy.fill" size={48} color={colors.gold} />
 
                   <AppText
                     style={[styles.badgeName, { color: colors.text }]}

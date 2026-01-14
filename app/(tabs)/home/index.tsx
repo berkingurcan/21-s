@@ -225,7 +225,7 @@ export default function HomeScreen() {
           </View>
           <View style={styles.statsRow}>
             <View style={styles.statItem}>
-              <AppText style={[styles.statNumber, { color: colors.warning }]}>
+              <AppText style={[styles.statNumber, { color: colors.gold }]}>
                 {stats.currentStreak}
               </AppText>
               <AppText style={[styles.statLabel, { color: colors.textMuted }]}>
@@ -278,7 +278,7 @@ export default function HomeScreen() {
             </AppText>
 
             <View style={[styles.tipBox, { backgroundColor: colors.surfaceAlt }]}>
-              <UiIconSymbol name="lightbulb.fill" size={16} color={colors.warning} />
+              <UiIconSymbol name="lightbulb.fill" size={16} color={colors.tip} />
               <AppText style={[styles.tipText, { color: colors.textMuted }]}>
                 {currentDayChallenge.tip}
               </AppText>
@@ -336,7 +336,7 @@ export default function HomeScreen() {
               <UiIconSymbol
                 name="trophy.fill"
                 size={28}
-                color={isCurrentDayMinted ? colors.success : colors.warning}
+                color={isCurrentDayMinted ? colors.success : colors.gold}
               />
               <View style={styles.mintInfo}>
                 <AppText style={[styles.mintBadgeName, { color: colors.text }]}>

@@ -180,7 +180,7 @@ export const DAILY_CHALLENGES: DailyChallenge[] = [
     day: 12,
     title: 'The Laugher',
     task: 'Make 2 people genuinely laugh with a comment or observation',
-    tip: 'Light humor, playful observations. Don\'t try too hard.',
+    tip: 'Light humor, playful observations. Don\'t try too hard. It can be weird or strange if needed.',
     mintFee: getMintFeeForDay(12),
     badge: {
       name: 'Day 12: Creating Joy',
@@ -192,7 +192,7 @@ export const DAILY_CHALLENGES: DailyChallenge[] = [
     day: 13,
     title: 'The Compliment Plus',
     task: 'Give 3 compliments that include a follow-up question',
-    tip: '"I love that jacket - where\'d you get it?" Opens conversation naturally.',
+    tip: '"I love that jacket - where\'d you get it?" Opens conversation naturally. Extend the conversation.',
     mintFee: getMintFeeForDay(13),
     badge: {
       name: 'Day 13: Engaging Interest',

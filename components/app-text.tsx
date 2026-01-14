@@ -13,6 +13,7 @@ export function AppText({ style, lightColor, darkColor, type = 'default', ...res
   return (
     <Text
       style={[
+        styles.base,
         { color },
         type === 'default' ? styles.default : undefined,
         type === 'title' ? styles.title : undefined,
@@ -27,27 +28,32 @@ export function AppText({ style, lightColor, darkColor, type = 'default', ...res
 }
 
 const styles = StyleSheet.create({
+  base: {
+    fontFamily: 'SpaceGrotesk_400Regular',
+  },
   default: {
     fontSize: 16,
     lineHeight: 24,
+    fontFamily: 'SpaceGrotesk_400Regular',
   },
   defaultSemiBold: {
     fontSize: 16,
     lineHeight: 24,
-    fontWeight: '600',
+    fontFamily: 'SpaceGrotesk_600SemiBold',
   },
   title: {
     fontSize: 32,
-    fontWeight: 'bold',
-    lineHeight: 32,
+    lineHeight: 38,
+    fontFamily: 'SpaceGrotesk_700Bold',
   },
   subtitle: {
     fontSize: 20,
-    fontWeight: 'bold',
+    fontFamily: 'SpaceGrotesk_700Bold',
   },
   link: {
     lineHeight: 30,
     fontSize: 16,
-    color: '#0a7ea4',
+    fontFamily: 'SpaceGrotesk_500Medium',
+    color: '#3B82F6',
   },
 })

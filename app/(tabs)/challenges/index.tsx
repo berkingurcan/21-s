@@ -173,7 +173,7 @@ export default function DaysScreen() {
             <AppText style={{ color: colors.textMuted, fontSize: 12 }}>Done</AppText>
           </View>
           <View style={styles.legendItem}>
-            <UiIconSymbol name="trophy.fill" size={14} color={colors.warning} />
+            <UiIconSymbol name="trophy.fill" size={14} color={colors.gold} />
             <AppText style={{ color: colors.textMuted, fontSize: 12 }}>Minted</AppText>
           </View>
           <View style={styles.legendItem}>
@@ -237,7 +237,7 @@ export default function DaysScreen() {
                     <UiIconSymbol name="lock.fill" size={12} color={colors.textSubtle} />
                   )}
                   {!isLocked && isMinted && (
-                    <UiIconSymbol name="trophy.fill" size={14} color={colors.warning} />
+                    <UiIconSymbol name="trophy.fill" size={14} color={colors.gold} />
                   )}
                   {!isLocked && !isMinted && isCompleted && (
                     <UiIconSymbol name="checkmark.circle.fill" size={16} color={colors.success} />

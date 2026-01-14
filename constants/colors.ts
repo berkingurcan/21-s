@@ -36,10 +36,14 @@ interface ColorPalette {
   // Status colors
   success: string
   successMuted: string
+  gold: string
+  goldMuted: string
   warning: string
   warningMuted: string
   error: string
   errorMuted: string
+  tip: string
+  tipMuted: string
 
   // Navigation
   tabIconDefault: string
@@ -99,10 +103,14 @@ export const Colors: { dark: ColorPalette; light: ColorPalette } = {
     // Status colors
     success: '#10B981', // Emerald green - completed
     successMuted: 'rgba(16, 185, 129, 0.12)',
-    warning: '#F59E0B', // Amber - badges, progress
+    gold: '#A78BFA', // Soft violet - badges, trophies (cooler than yellow)
+    goldMuted: 'rgba(167, 139, 250, 0.12)',
+    warning: '#F59E0B', // Amber - kept for actual warnings
     warningMuted: 'rgba(245, 158, 11, 0.12)',
     error: '#EF4444', // Red - errors
     errorMuted: 'rgba(239, 68, 68, 0.12)',
+    tip: '#22D3EE', // Cyan - tips, hints
+    tipMuted: 'rgba(34, 211, 238, 0.12)',
 
     // Navigation
     tabIconDefault: '#6B7280',
@@ -133,10 +141,14 @@ export const Colors: { dark: ColorPalette; light: ColorPalette } = {
     borderAccent: '#3B82F6',
     success: '#10B981',
     successMuted: 'rgba(16, 185, 129, 0.12)',
+    gold: '#A78BFA',
+    goldMuted: 'rgba(167, 139, 250, 0.12)',
     warning: '#F59E0B',
     warningMuted: 'rgba(245, 158, 11, 0.12)',
     error: '#EF4444',
     errorMuted: 'rgba(239, 68, 68, 0.12)',
+    tip: '#22D3EE',
+    tipMuted: 'rgba(34, 211, 238, 0.12)',
     tabIconDefault: '#6B7280',
     tabIconSelected: accentColor,
     icon: '#9BA1A6',
