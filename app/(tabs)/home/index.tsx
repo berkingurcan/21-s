@@ -7,11 +7,13 @@ import { useGetBalance } from '@/components/account/use-get-balance'
 import { AppPage } from '@/components/app-page'
 import { AppText } from '@/components/app-text'
 import { useChallenge } from '@/components/challenge/challenge-provider'
+import { MintSuccessModal } from '@/components/challenge/mint-success-modal'
 import { formatMintFee, useMintBadge } from '@/components/challenge/use-mint-badge'
+import { ClusterNetwork } from '@/components/cluster/cluster-network'
+import { useCluster } from '@/components/cluster/cluster-provider'
 import { UiIconSymbol } from '@/components/ui/ui-icon-symbol'
 import { getMintFeeForDay } from '@/constants/challenges'
 import { Colors } from '@/constants/colors'
-// Removed getPublicKeyFromAccount - using account.publicKey directly
 import { useMobileWallet } from '@wallet-ui/react-native-web3js'
 import { useRouter } from 'expo-router'
 import React, { useState } from 'react'
@@ -32,6 +34,7 @@ export default function HomeScreen() {
   const router = useRouter()
   const colors = Colors.dark
   const { account } = useMobileWallet()
+  const { selectedCluster } = useCluster()
 
   const {
     currentDay,
@@ -51,6 +54,8 @@ export default function HomeScreen() {
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [isCompleting, setIsCompleting] = useState(false)
   const [isMinting, setIsMinting] = useState(false)
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [mintResult, setMintResult] = useState<{ mintAddress: string; signature: string } | null>(null)
 
   // Use account.publicKey directly - this is the correct wallet address
   const address = account?.publicKey ?? null
@@ -86,53 +91,42 @@ export default function HomeScreen() {
   }
 
   const handleMintBadge = async () => {
-    console.log('handleMintBadge called')
-    console.log('currentDayState:', currentDayState)
-    console.log('address:', address)
-
-    if (!currentDayState || !address) {
-      console.log('Early return: no currentDayState or address')
+    if (!currentDayState || !address || !currentDayChallenge) {
       return
     }
     if (!currentDayState.canMint) {
-      console.log('Early return: canMint is false', currentDayState.canMint)
       return
     }
 
     const mintFee = getMintFeeForDay(currentDay)
     const solBalance = balance ? balance / 1e9 : 0
-    console.log('mintFee:', mintFee, 'solBalance:', solBalance)
 
-    if (solBalance < mintFee + 0.001) {
+    // Check balance first - need mint fee + ~0.01 SOL for NFT creation fees
+    if (solBalance < mintFee + 0.01) {
       Alert.alert(
         'Insufficient Balance',
-        `You need ${formatMintFee(mintFee)} + network fees to mint this badge.`
+        `You need ${formatMintFee(mintFee)} + ~0.01 SOL network fees to mint this badge.`
       )
       return
     }
 
-    Alert.alert(
-      'Mint Badge',
-      `Mint Day ${currentDay} badge for ${formatMintFee(mintFee)}?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Mint',
-          onPress: async () => {
-            setIsMinting(true)
-            try {
-              const result = await mintBadge.mutateAsync({ day: currentDay })
-              await markBadgeMinted(currentDay, result.badge)
-              Alert.alert('Success!', `Day ${currentDay} badge minted!`)
-            } catch (error) {
-              Alert.alert('Error', 'Failed to mint badge. Please try again.')
-            } finally {
-              setIsMinting(false)
-            }
-          },
-        },
-      ]
-    )
+    // Directly start minting - wallet will handle confirmation
+    setIsMinting(true)
+    try {
+      const result = await mintBadge.mutateAsync({ day: currentDay })
+      await markBadgeMinted(currentDay, result.badge)
+
+      // Show success modal
+      setMintResult({
+        mintAddress: result.mintAddress,
+        signature: result.signature,
+      })
+      setShowSuccessModal(true)
+    } catch (error) {
+      Alert.alert('Minting Failed', 'Transaction was cancelled or failed. Please try again.')
+    } finally {
+      setIsMinting(false)
+    }
   }
 
   const handlePreviousDay = () => {
@@ -396,6 +390,21 @@ export default function HomeScreen() {
           </View>
         )}
       </ScrollView>
+
+      {/* Success Modal */}
+      {currentDayChallenge && mintResult && (
+        <MintSuccessModal
+          visible={showSuccessModal}
+          onClose={() => {
+            setShowSuccessModal(false)
+            setMintResult(null)
+          }}
+          challenge={currentDayChallenge}
+          mintAddress={mintResult.mintAddress}
+          signature={mintResult.signature}
+          network={selectedCluster.network === ClusterNetwork.Mainnet ? 'mainnet-beta' : 'devnet'}
+        />
+      )}
     </AppPage>
   )
 }

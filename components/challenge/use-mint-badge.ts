@@ -1,62 +1,17 @@
 /**
  * Badge Minting Hook
- * Handles the mint fee payment for daily challenge badges
- *
- * For production, integrate with Metaplex or compressed NFTs
- * Currently: Processes mint fee payment to treasury
+ * Handles real NFT minting for daily challenge badges
  */
 
-import { createTransaction } from '@/components/account/create-transaction'
 import { useGetBalanceInvalidate } from '@/components/account/use-get-balance'
 import { getDayChallenge, getMintFeeForDay } from '@/constants/challenges'
-import { BadgeMetadata, DailyChallenge, MintedBadge } from '@/types/challenges'
+import { BadgeMetadata, MintedBadge } from '@/types/challenges'
 import { PublicKey, TransactionSignature } from '@solana/web3.js'
 import { useMutation } from '@tanstack/react-query'
 import { useMobileWallet } from '@wallet-ui/react-native-web3js'
+import { buildNFTMintTransaction, generateBadgeMetadata, TREASURY_WALLET } from './nft-minting-service'
 
-// Treasury wallet address - replace with your actual wallet
-// This is where mint fees are collected
-export const TREASURY_WALLET = new PublicKey(
-  'd29KQE5Gw3dY6qDEvFvmfp4bCr4kUWZm4EnGojUfiZb' // Example devnet wallet
-)
-
-// App symbol for NFT metadata
-const APP_SYMBOL = '21S'
-
-// Generate badge metadata (Metaplex standard)
-function generateBadgeMetadata(
-  challenge: DailyChallenge,
-  walletAddress: string
-): BadgeMetadata {
-  return {
-    name: challenge.badge.name,
-    symbol: APP_SYMBOL,
-    description: challenge.badge.description,
-    image: `https://21-s.app/badges/${challenge.badge.image}.png`, // Placeholder
-    attributes: [
-      { trait_type: 'Day', value: challenge.day },
-      { trait_type: 'Title', value: challenge.title },
-      { trait_type: 'Mint Fee', value: `${challenge.mintFee} SOL` },
-      { trait_type: 'Completed By', value: walletAddress },
-      { trait_type: 'Completed Date', value: new Date().toISOString().split('T')[0] },
-    ],
-    properties: {
-      files: [
-        {
-          uri: `https://21-s.app/badges/${challenge.badge.image}.png`,
-          type: 'image/png',
-        },
-      ],
-      category: 'image',
-      creators: [
-        {
-          address: TREASURY_WALLET.toBase58(),
-          share: 100,
-        },
-      ],
-    },
-  }
-}
+export { TREASURY_WALLET }
 
 export interface MintBadgeInput {
   day: number
@@ -65,6 +20,7 @@ export interface MintBadgeInput {
 export interface MintBadgeResult {
   badge: MintedBadge
   signature: TransactionSignature
+  mintAddress: string
 }
 
 export function useMintBadge({ address }: { address: PublicKey }) {
@@ -82,16 +38,16 @@ export function useMintBadge({ address }: { address: PublicKey }) {
 
       const mintFee = getMintFeeForDay(input.day)
 
-      // Create transaction to pay mint fee to treasury
-      const { transaction, latestBlockhash, minContextSlot } =
-        await createTransaction({
-          publicKey: address,
-          destination: TREASURY_WALLET,
-          amount: mintFee,
+      // Build the NFT mint transaction
+      const { transaction, mintKeypair, tokenAccount, latestBlockhash, minContextSlot } =
+        await buildNFTMintTransaction({
           connection,
+          payer: address,
+          challenge,
+          mintFee,
         })
 
-      // Sign and send the transaction
+      // Sign and send the transaction (wallet will prompt user)
       const signature = await signAndSendTransaction(transaction, minContextSlot)
 
       // Confirm the transaction
@@ -101,18 +57,22 @@ export function useMintBadge({ address }: { address: PublicKey }) {
       )
 
       // Generate badge metadata
-      const metadata = generateBadgeMetadata(challenge, address.toBase58())
+      const metadata = generateBadgeMetadata(
+        challenge,
+        address.toBase58(),
+        mintKeypair.publicKey.toBase58()
+      ) as BadgeMetadata
 
       // Create badge record
       const badge: MintedBadge = {
         day: input.day,
-        mintAddress: `badge_day${input.day}_${Date.now()}`, // Placeholder - would be actual NFT mint address
+        mintAddress: mintKeypair.publicKey.toBase58(),
         transactionSignature: signature,
         mintedAt: new Date().toISOString(),
         metadata,
       }
 
-      return { badge, signature }
+      return { badge, signature, mintAddress: mintKeypair.publicKey.toBase58() }
     },
     onSuccess: async () => {
       await invalidateBalance()
@@ -127,7 +87,7 @@ export function useMintBadge({ address }: { address: PublicKey }) {
 export function canAffordMint(
   balance: number,
   mintFee: number,
-  estimatedTxFee: number = 0.001 // ~0.001 SOL for transaction fees
+  estimatedTxFee: number = 0.01 // ~0.01 SOL for NFT mint transaction fees
 ): boolean {
   return balance >= mintFee + estimatedTxFee
 }

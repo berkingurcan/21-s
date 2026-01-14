@@ -7,11 +7,13 @@ import { useGetBalance } from '@/components/account/use-get-balance'
 import { AppPage } from '@/components/app-page'
 import { AppText } from '@/components/app-text'
 import { useChallenge } from '@/components/challenge/challenge-provider'
+import { MintSuccessModal } from '@/components/challenge/mint-success-modal'
 import { formatMintFee, useMintBadge } from '@/components/challenge/use-mint-badge'
+import { ClusterNetwork } from '@/components/cluster/cluster-network'
+import { useCluster } from '@/components/cluster/cluster-provider'
 import { UiIconSymbol } from '@/components/ui/ui-icon-symbol'
 import { getDayChallenge, getMintFeeForDay } from '@/constants/challenges'
 import { Colors } from '@/constants/colors'
-// Removed getPublicKeyFromAccount - using account.publicKey directly
 import { ellipsify } from '@/utils/ellipsify'
 import { useMobileWallet } from '@wallet-ui/react-native-web3js'
 import { useRouter } from 'expo-router'
@@ -29,6 +31,7 @@ export default function ProfileScreen() {
   const router = useRouter()
   const colors = Colors.dark
   const { account } = useMobileWallet()
+  const { selectedCluster } = useCluster()
 
   const {
     stats,
@@ -47,6 +50,8 @@ export default function ProfileScreen() {
 
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [mintingDay, setMintingDay] = useState<number | null>(null)
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [mintResult, setMintResult] = useState<{ day: number; mintAddress: string; signature: string } | null>(null)
 
   const handleRefresh = async () => {
     setIsRefreshing(true)
@@ -63,36 +68,32 @@ export default function ProfileScreen() {
     const mintFee = getMintFeeForDay(day)
     const solBalance = balance ? balance / 1e9 : 0
 
-    if (solBalance < mintFee + 0.001) {
+    if (solBalance < mintFee + 0.01) {
       Alert.alert(
         'Insufficient Balance',
-        `You need ${formatMintFee(mintFee)} + network fees to mint this badge.`
+        `You need ${formatMintFee(mintFee)} + ~0.01 SOL network fees to mint this badge.`
       )
       return
     }
 
-    Alert.alert(
-      'Mint Badge',
-      `Mint "${challenge.badge.name}" for ${formatMintFee(mintFee)}?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Mint',
-          onPress: async () => {
-            setMintingDay(day)
-            try {
-              const result = await mintBadge.mutateAsync({ day })
-              await markBadgeMinted(day, result.badge)
-              Alert.alert('Success!', 'Your badge has been minted!')
-            } catch (error) {
-              Alert.alert('Error', 'Failed to mint badge. Please try again.')
-            } finally {
-              setMintingDay(null)
-            }
-          },
-        },
-      ]
-    )
+    // Directly start minting - wallet will handle confirmation
+    setMintingDay(day)
+    try {
+      const result = await mintBadge.mutateAsync({ day })
+      await markBadgeMinted(day, result.badge)
+
+      // Show success modal
+      setMintResult({
+        day,
+        mintAddress: result.mintAddress,
+        signature: result.signature,
+      })
+      setShowSuccessModal(true)
+    } catch (error) {
+      Alert.alert('Minting Failed', 'Transaction was cancelled or failed. Please try again.')
+    } finally {
+      setMintingDay(null)
+    }
   }
 
   const handleSettingsPress = () => {
@@ -298,6 +299,21 @@ export default function ProfileScreen() {
         {/* Bottom spacing */}
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      {/* Success Modal */}
+      {mintResult && (
+        <MintSuccessModal
+          visible={showSuccessModal}
+          onClose={() => {
+            setShowSuccessModal(false)
+            setMintResult(null)
+          }}
+          challenge={getDayChallenge(mintResult.day)!}
+          mintAddress={mintResult.mintAddress}
+          signature={mintResult.signature}
+          network={selectedCluster.network === ClusterNetwork.Mainnet ? 'mainnet-beta' : 'devnet'}
+        />
+      )}
     </AppPage>
   )
 }
