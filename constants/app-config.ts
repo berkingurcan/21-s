@@ -3,8 +3,9 @@ import { Cluster } from '@/components/cluster/cluster'
 import { ClusterNetwork } from '@/components/cluster/cluster-network'
 
 export class AppConfig {
-  static name = '21-s'
-  static uri = 'https://example.com'
+  static name = '21-S'
+  static description = '21 Days to Social Mastery'
+  static uri = 'https://21-s.app' // Update with your actual domain
   static clusters: Cluster[] = [
     {
       id: 'solana:devnet',

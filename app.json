@@ -1,23 +1,24 @@
 {
   "expo": {
-    "name": "21-s",
+    "name": "21-S",
     "slug": "21-s",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "templateexpobasic",
-    "userInterfaceStyle": "automatic",
+    "scheme": "twentyones",
+    "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.twentyones.app"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#0A0A0F"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.beeman.web3jsexpo"
+      "package": "com.twentyones.app"
     },
     "web": {
       "bundler": "metro",
@@ -29,9 +30,9 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#FFFFFF",
+          "backgroundColor": "#0A0A0F",
           "dark": {
-            "backgroundColor": "#000000",
+            "backgroundColor": "#0A0A0F",
             "image": "./assets/images/splash-icon.png"
           },
           "image": "./assets/images/splash-icon.png",
