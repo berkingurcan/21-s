@@ -11,6 +11,7 @@ import { MintSuccessModal } from '@/components/challenge/mint-success-modal'
 import { formatMintFee, useMintBadge } from '@/components/challenge/use-mint-badge'
 import { ClusterNetwork } from '@/components/cluster/cluster-network'
 import { useCluster } from '@/components/cluster/cluster-provider'
+import { InfoModal } from '@/components/info/info-modal'
 import { UiIconSymbol } from '@/components/ui/ui-icon-symbol'
 import { getMintFeeForDay } from '@/constants/challenges'
 import { Colors } from '@/constants/colors'
@@ -55,6 +56,7 @@ export default function HomeScreen() {
   const [isCompleting, setIsCompleting] = useState(false)
   const [isMinting, setIsMinting] = useState(false)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [showInfoModal, setShowInfoModal] = useState(false)
   const [mintResult, setMintResult] = useState<{ mintAddress: string; signature: string } | null>(null)
 
   // Use account.publicKey directly - this is the correct wallet address
@@ -130,15 +132,36 @@ export default function HomeScreen() {
   }
 
   const handlePreviousDay = () => {
+    // Can always go back (but not below day 1)
     if (currentDay > 1) {
       navigateToDay(currentDay - 1)
     }
   }
 
+  // Check if user can proceed to next day (must complete and mint current day)
+  const canProceedToNextDay = () => {
+    return isDayCompleted(currentDay) && isDayMinted(currentDay)
+  }
+
   const handleNextDay = () => {
-    if (currentDay < 21) {
-      navigateToDay(currentDay + 1)
+    if (currentDay >= 21) return
+
+    if (!canProceedToNextDay()) {
+      if (!isDayCompleted(currentDay)) {
+        Alert.alert(
+          'Complete Today First',
+          'Complete today\'s challenge before moving to the next day.'
+        )
+      } else if (!isDayMinted(currentDay)) {
+        Alert.alert(
+          'Mint Your Badge',
+          'Mint your badge for today before unlocking the next day.'
+        )
+      }
+      return
     }
+
+    navigateToDay(currentDay + 1)
   }
 
   const progressPercent = Math.round((stats.daysCompleted / 21) * 100)
@@ -169,6 +192,13 @@ export default function HomeScreen() {
             <AppText style={styles.headerTitle}>21-S</AppText>
           </View>
           <View style={styles.headerRight}>
+            <TouchableOpacity
+              onPress={() => setShowInfoModal(true)}
+              style={[styles.infoButton, { backgroundColor: colors.surfaceAlt }]}
+              activeOpacity={0.7}
+            >
+              <UiIconSymbol name="info.circle" size={20} color={colors.textMuted} />
+            </TouchableOpacity>
             <View style={[styles.dayBadge, { backgroundColor: colors.accent }]}>
               <AppText style={styles.dayBadgeText}>Day {currentDay}</AppText>
             </View>
@@ -314,9 +344,9 @@ export default function HomeScreen() {
                 </AppText>
                 <AppText style={{ color: colors.textMuted, fontSize: 13 }}>
                   {isCurrentDayMinted
-                    ? 'Already minted ✓'
+                    ? 'Badge collected'
                     : isCurrentDayCompleted
-                      ? 'Ready to mint!'
+                      ? 'Ready to mint'
                       : 'Complete the task to unlock'}
                 </AppText>
               </View>
@@ -345,17 +375,18 @@ export default function HomeScreen() {
 
         {/* Day Navigation */}
         <View style={styles.dayNavigation}>
-          <TouchableOpacity
-            onPress={handlePreviousDay}
-            disabled={currentDay <= 1}
-            style={[styles.navButton, {
-              backgroundColor: colors.surface,
-              opacity: currentDay <= 1 ? 0.5 : 1
-            }]}
-          >
-            <UiIconSymbol name="chevron.left" size={20} color={colors.text} />
-            <AppText style={{ color: colors.text }}>Day {currentDay - 1}</AppText>
-          </TouchableOpacity>
+          {/* Only show previous button if not on Day 1 */}
+          {currentDay > 1 ? (
+            <TouchableOpacity
+              onPress={handlePreviousDay}
+              style={[styles.navButton, { backgroundColor: colors.surface }]}
+            >
+              <UiIconSymbol name="chevron.left" size={20} color={colors.text} />
+              <AppText style={{ color: colors.text }}>Day {currentDay - 1}</AppText>
+            </TouchableOpacity>
+          ) : (
+            <View style={styles.navButtonPlaceholder} />
+          )}
 
           <TouchableOpacity
             onPress={() => router.push('/(tabs)/challenges')}
@@ -364,17 +395,36 @@ export default function HomeScreen() {
             <AppText style={{ color: colors.accent, fontWeight: '600' }}>All Days</AppText>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            onPress={handleNextDay}
-            disabled={currentDay >= 21}
-            style={[styles.navButton, {
-              backgroundColor: colors.surface,
-              opacity: currentDay >= 21 ? 0.5 : 1
-            }]}
-          >
-            <AppText style={{ color: colors.text }}>Day {currentDay + 1}</AppText>
-            <UiIconSymbol name="chevron.right" size={20} color={colors.text} />
-          </TouchableOpacity>
+          {/* Show next button with lock if not completed + minted */}
+          {currentDay < 21 ? (
+            <TouchableOpacity
+              onPress={handleNextDay}
+              style={[
+                styles.navButton,
+                {
+                  backgroundColor: canProceedToNextDay()
+                    ? colors.surface
+                    : colors.surfaceAlt,
+                  opacity: canProceedToNextDay() ? 1 : 0.7,
+                },
+              ]}
+            >
+              <AppText
+                style={{
+                  color: canProceedToNextDay() ? colors.text : colors.textSubtle,
+                }}
+              >
+                Day {currentDay + 1}
+              </AppText>
+              {canProceedToNextDay() ? (
+                <UiIconSymbol name="chevron.right" size={20} color={colors.text} />
+              ) : (
+                <UiIconSymbol name="lock.fill" size={16} color={colors.textSubtle} />
+              )}
+            </TouchableOpacity>
+          ) : (
+            <View style={styles.navButtonPlaceholder} />
+          )}
         </View>
 
         {/* All Complete Message */}
@@ -405,6 +455,12 @@ export default function HomeScreen() {
           network={selectedCluster.network === ClusterNetwork.Mainnet ? 'mainnet-beta' : 'devnet'}
         />
       )}
+
+      {/* Info Modal */}
+      <InfoModal
+        visible={showInfoModal}
+        onClose={() => setShowInfoModal(false)}
+      />
     </AppPage>
   )
 }
@@ -436,6 +492,14 @@ const styles = StyleSheet.create({
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 10,
+  },
+  infoButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   dayBadge: {
     paddingHorizontal: 14,
@@ -451,6 +515,8 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 20,
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.04)',
   },
   progressHeader: {
     flexDirection: 'row',
@@ -496,6 +562,8 @@ const styles = StyleSheet.create({
     padding: 24,
     borderRadius: 24,
     marginBottom: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.04)',
   },
   challengeHeader: {
     flexDirection: 'row',
@@ -604,6 +672,9 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 14,
     borderRadius: 12,
+  },
+  navButtonPlaceholder: {
+    width: 100,
   },
   allDaysButton: {
     paddingVertical: 12,

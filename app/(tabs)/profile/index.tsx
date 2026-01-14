@@ -11,6 +11,7 @@ import { MintSuccessModal } from '@/components/challenge/mint-success-modal'
 import { formatMintFee, useMintBadge } from '@/components/challenge/use-mint-badge'
 import { ClusterNetwork } from '@/components/cluster/cluster-network'
 import { useCluster } from '@/components/cluster/cluster-provider'
+import { InfoModal } from '@/components/info/info-modal'
 import { UiIconSymbol } from '@/components/ui/ui-icon-symbol'
 import { getDayChallenge, getMintFeeForDay } from '@/constants/challenges'
 import { Colors } from '@/constants/colors'
@@ -51,6 +52,7 @@ export default function ProfileScreen() {
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [mintingDay, setMintingDay] = useState<number | null>(null)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [showInfoModal, setShowInfoModal] = useState(false)
   const [mintResult, setMintResult] = useState<{ day: number; mintAddress: string; signature: string } | null>(null)
 
   const handleRefresh = async () => {
@@ -134,12 +136,21 @@ export default function ProfileScreen() {
               {account?.address ? ellipsify(account.address, 8) : 'Not connected'}
             </AppText>
           </View>
-          <TouchableOpacity
-            onPress={handleSettingsPress}
-            style={[styles.settingsButton, { backgroundColor: colors.surface }]}
-          >
-            <UiIconSymbol name="gearshape.fill" size={22} color={colors.icon} />
-          </TouchableOpacity>
+          <View style={styles.headerActions}>
+            <TouchableOpacity
+              onPress={() => setShowInfoModal(true)}
+              style={[styles.infoButton, { backgroundColor: colors.surface }]}
+              activeOpacity={0.7}
+            >
+              <UiIconSymbol name="info.circle" size={20} color={colors.textMuted} />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={handleSettingsPress}
+              style={[styles.settingsButton, { backgroundColor: colors.surface }]}
+            >
+              <UiIconSymbol name="gearshape.fill" size={22} color={colors.icon} />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Stats Grid */}
@@ -314,6 +325,12 @@ export default function ProfileScreen() {
           network={selectedCluster.network === ClusterNetwork.Mainnet ? 'mainnet-beta' : 'devnet'}
         />
       )}
+
+      {/* Info Modal */}
+      <InfoModal
+        visible={showInfoModal}
+        onClose={() => setShowInfoModal(false)}
+      />
     </AppPage>
   )
 }
@@ -337,6 +354,15 @@ const styles = StyleSheet.create({
   walletAddress: {
     fontSize: 14,
     marginTop: 4,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  infoButton: {
+    padding: 12,
+    borderRadius: 12,
   },
   settingsButton: {
     padding: 12,

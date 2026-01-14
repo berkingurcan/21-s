@@ -144,7 +144,7 @@ export const DAILY_CHALLENGES: DailyChallenge[] = [
     day: 9,
     title: 'The Introducer',
     task: 'Introduce yourself to 2 people: "Hey, I\'m [name]"',
-    tip: 'Direct but casual. Eye contact, slight smile, confident posture.',
+    tip: 'Direct but casual. Eye contact, slight smile, confident posture. It will help you to be more comfortable with introductions.',
     mintFee: getMintFeeForDay(9),
     badge: {
       name: 'Day 9: Breaking the Ice',
@@ -155,8 +155,8 @@ export const DAILY_CHALLENGES: DailyChallenge[] = [
   {
     day: 10,
     title: 'The Opinion Seeker',
-    task: 'Ask 3 people for their opinion on something',
-    tip: '"Hey quick question - do you think X or Y?" Simple binary choices work.',
+    task: 'Ask 3 girls for their opinion on something',
+    tip: '"Hey quick question - do you think X or Y?" Simple binary choices work. Also, questions about relationships are great conversation starters.',
     mintFee: getMintFeeForDay(10),
     badge: {
       name: 'Day 10: Valuing Input',
@@ -167,7 +167,7 @@ export const DAILY_CHALLENGES: DailyChallenge[] = [
   {
     day: 11,
     title: 'The Expander',
-    task: 'Have 2 conversations lasting at least 2 minutes each',
+    task: 'Have 2 conversations lasting at least 2 minutes each girls.',
     tip: 'Use threading: pick up on things they say and expand on them.',
     mintFee: getMintFeeForDay(11),
     badge: {

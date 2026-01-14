@@ -6,11 +6,13 @@
 import { AppPage } from '@/components/app-page'
 import { AppText } from '@/components/app-text'
 import { useChallenge } from '@/components/challenge/challenge-provider'
+import { InfoModal } from '@/components/info/info-modal'
 import { UiIconSymbol } from '@/components/ui/ui-icon-symbol'
 import { Colors } from '@/constants/colors'
 import { useRouter } from 'expo-router'
 import React, { useState } from 'react'
 import {
+  Alert,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -33,6 +35,7 @@ export default function DaysScreen() {
   } = useChallenge()
 
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [showInfoModal, setShowInfoModal] = useState(false)
 
   const handleRefresh = async () => {
     setIsRefreshing(true)
@@ -40,7 +43,53 @@ export default function DaysScreen() {
     setIsRefreshing(false)
   }
 
+  // Check if a day is accessible (can go back or forward only if previous day is completed + minted)
+  const canAccessDay = (day: number): boolean => {
+    // Can always access current day or earlier
+    if (day <= currentDay) return true
+
+    // For future days, check if all previous days are completed and minted
+    for (let i = 1; i < day; i++) {
+      if (!isDayCompleted(i) || !isDayMinted(i)) {
+        return false
+      }
+    }
+    return true
+  }
+
   const handleDayPress = (day: number) => {
+    // Going backward is always allowed
+    if (day <= currentDay) {
+      navigateToDay(day)
+      router.push('/(tabs)/home')
+      return
+    }
+
+    // Check if can access this day
+    if (!canAccessDay(day)) {
+      // Find the first incomplete/unminted day
+      let blockedDay = currentDay
+      for (let i = 1; i < day; i++) {
+        if (!isDayCompleted(i) || !isDayMinted(i)) {
+          blockedDay = i
+          break
+        }
+      }
+
+      if (!isDayCompleted(blockedDay)) {
+        Alert.alert(
+          'Day Locked',
+          `Complete Day ${blockedDay} first before accessing Day ${day}.`
+        )
+      } else {
+        Alert.alert(
+          'Day Locked',
+          `Mint your badge for Day ${blockedDay} to unlock Day ${day}.`
+        )
+      }
+      return
+    }
+
     navigateToDay(day)
     router.push('/(tabs)/home')
   }
@@ -61,15 +110,24 @@ export default function DaysScreen() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => router.push('/(tabs)/home')}
-            style={styles.backButton}
-          >
-            <UiIconSymbol name="chevron.left" size={20} color={colors.textMuted} />
-            <AppText style={[styles.backText, { color: colors.textMuted }]}>
-              Today
-            </AppText>
-          </TouchableOpacity>
+          <View style={styles.headerTop}>
+            <TouchableOpacity
+              onPress={() => router.push('/(tabs)/home')}
+              style={styles.backButton}
+            >
+              <UiIconSymbol name="chevron.left" size={20} color={colors.textMuted} />
+              <AppText style={[styles.backText, { color: colors.textMuted }]}>
+                Today
+              </AppText>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setShowInfoModal(true)}
+              style={[styles.infoButton, { backgroundColor: colors.surfaceAlt }]}
+              activeOpacity={0.7}
+            >
+              <UiIconSymbol name="info.circle" size={20} color={colors.textMuted} />
+            </TouchableOpacity>
+          </View>
           <AppText type="title" style={{ color: colors.text, marginTop: 12 }}>
             21 Days
           </AppText>
@@ -112,15 +170,15 @@ export default function DaysScreen() {
         <View style={styles.legend}>
           <View style={styles.legendItem}>
             <View style={[styles.legendDot, { backgroundColor: colors.success }]} />
-            <AppText style={{ color: colors.textMuted, fontSize: 12 }}>Completed</AppText>
-          </View>
-          <View style={styles.legendItem}>
-            <View style={[styles.legendDot, { backgroundColor: colors.accent }]} />
-            <AppText style={{ color: colors.textMuted, fontSize: 12 }}>Current</AppText>
+            <AppText style={{ color: colors.textMuted, fontSize: 12 }}>Done</AppText>
           </View>
           <View style={styles.legendItem}>
             <UiIconSymbol name="trophy.fill" size={14} color={colors.warning} />
             <AppText style={{ color: colors.textMuted, fontSize: 12 }}>Minted</AppText>
+          </View>
+          <View style={styles.legendItem}>
+            <UiIconSymbol name="lock.fill" size={12} color={colors.textSubtle} />
+            <AppText style={{ color: colors.textMuted, fontSize: 12 }}>Locked</AppText>
           </View>
         </View>
 
@@ -130,6 +188,7 @@ export default function DaysScreen() {
             const isCompleted = isDayCompleted(dayChallenge.day)
             const isMinted = isDayMinted(dayChallenge.day)
             const isCurrent = dayChallenge.day === currentDay
+            const isLocked = !canAccessDay(dayChallenge.day)
 
             return (
               <TouchableOpacity
@@ -138,16 +197,21 @@ export default function DaysScreen() {
                 style={[
                   styles.dayCard,
                   {
-                    backgroundColor: isCurrent
-                      ? colors.accentGlow
-                      : isCompleted
-                        ? colors.successMuted
-                        : colors.surface,
-                    borderColor: isCurrent
-                      ? colors.accent
-                      : isCompleted
-                        ? colors.success
-                        : colors.border,
+                    backgroundColor: isLocked
+                      ? colors.surfaceAlt
+                      : isCurrent
+                        ? colors.accentGlow
+                        : isCompleted
+                          ? colors.successMuted
+                          : colors.surface,
+                    borderColor: isLocked
+                      ? colors.border
+                      : isCurrent
+                        ? colors.accent
+                        : isCompleted
+                          ? colors.success
+                          : colors.border,
+                    opacity: isLocked ? 0.6 : 1,
                   },
                 ]}
                 activeOpacity={0.7}
@@ -157,25 +221,30 @@ export default function DaysScreen() {
                     style={[
                       styles.dayNumber,
                       {
-                        color: isCurrent
-                          ? colors.accent
-                          : isCompleted
-                            ? colors.success
-                            : colors.text,
+                        color: isLocked
+                          ? colors.textSubtle
+                          : isCurrent
+                            ? colors.accent
+                            : isCompleted
+                              ? colors.success
+                              : colors.text,
                       },
                     ]}
                   >
                     {dayChallenge.day}
                   </AppText>
-                  {isMinted && (
+                  {isLocked && (
+                    <UiIconSymbol name="lock.fill" size={12} color={colors.textSubtle} />
+                  )}
+                  {!isLocked && isMinted && (
                     <UiIconSymbol name="trophy.fill" size={14} color={colors.warning} />
                   )}
-                  {!isMinted && isCompleted && (
+                  {!isLocked && !isMinted && isCompleted && (
                     <UiIconSymbol name="checkmark.circle.fill" size={16} color={colors.success} />
                   )}
                 </View>
                 <AppText
-                  style={[styles.dayTitle, { color: colors.textMuted }]}
+                  style={[styles.dayTitle, { color: isLocked ? colors.textSubtle : colors.textMuted }]}
                   numberOfLines={1}
                 >
                   {dayChallenge.title}
@@ -210,6 +279,12 @@ export default function DaysScreen() {
         {/* Bottom Spacing */}
         <View style={{ height: 20 }} />
       </ScrollView>
+
+      {/* Info Modal */}
+      <InfoModal
+        visible={showInfoModal}
+        onClose={() => setShowInfoModal(false)}
+      />
     </AppPage>
   )
 }
@@ -218,13 +293,23 @@ const styles = StyleSheet.create({
   header: {
     marginBottom: 16,
   },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
   backButton: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    marginBottom: 4,
     marginLeft: -4,
-    alignSelf: 'flex-start',
+  },
+  infoButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   backText: {
     fontSize: 15,

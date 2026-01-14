@@ -21,6 +21,9 @@ const MAPPING = {
   'chevron.right': 'chevron-right',
   'arrow.uturn.backward': 'undo',
   'play.fill': 'play-arrow',
+  'xmark': 'close',
+  'arrow.right': 'arrow-forward',
+  'info.circle': 'info-outline',
 
   // Tab bar icons
   'flame.fill': 'local-fire-department',
@@ -29,13 +32,23 @@ const MAPPING = {
 
   // Status icons
   'checkmark.circle.fill': 'check-circle',
+  'checkmark.circle': 'check-circle-outline',
   'trophy.fill': 'emoji-events',
   'lightbulb.fill': 'lightbulb',
   'lock.fill': 'lock',
+  'star.fill': 'star',
 
   // Content icons
   'list.bullet.rectangle.fill': 'list-alt',
   'clock.fill': 'access-time',
+  'eye.fill': 'visibility',
+  'arrow.up.right.square': 'open-in-new',
+
+  // Info modal icons
+  'sparkles': 'auto-awesome',
+  'target': 'gps-fixed',
+  'arrow.triangle.branch': 'account-tree',
+  'brain.head.profile': 'psychology',
 } as UiIconMapping
 
 /**
