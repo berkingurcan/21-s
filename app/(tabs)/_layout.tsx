@@ -43,13 +43,24 @@ export default function TabLayout() {
         options={{ tabBarItemStyle: { display: 'none' } }}
       />
 
-      {/* Home - Current challenge progress (main screen) */}
+      {/* Home - Current day's challenge (main screen) */}
       <Tabs.Screen
         name="home"
         options={{
           title: 'Today',
           tabBarIcon: ({ color }) => (
             <UiIconSymbol size={26} name="flame.fill" color={color} />
+          ),
+        }}
+      />
+
+      {/* Days - All 21 days grid view */}
+      <Tabs.Screen
+        name="challenges"
+        options={{
+          title: 'Days',
+          tabBarIcon: ({ color }) => (
+            <UiIconSymbol size={26} name="calendar" color={color} />
           ),
         }}
       />
@@ -65,27 +76,8 @@ export default function TabLayout() {
         }}
       />
 
-      {/* Wallet - Account management */}
-      <Tabs.Screen
-        name="wallet"
-        options={{
-          title: 'Wallet',
-          tabBarIcon: ({ color }) => (
-            <UiIconSymbol size={26} name="wallet.pass.fill" color={color} />
-          ),
-        }}
-      />
-
-      {/* Hide old tabs */}
-      <Tabs.Screen
-        name="challenges"
-        options={{
-          title: 'Challenges',
-          tabBarIcon: ({ color }) => (
-            <UiIconSymbol size={26} name="list.bullet.rectangle.fill" color={color} />
-          ),
-        }}
-      />
+      {/* Hidden tabs */}
+      <Tabs.Screen name="wallet" options={{ href: null }} />
       <Tabs.Screen name="settings" options={{ href: null }} />
       <Tabs.Screen name="demo" options={{ href: null }} />
       <Tabs.Screen name="account" options={{ href: null }} />

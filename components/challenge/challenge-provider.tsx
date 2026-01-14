@@ -1,38 +1,37 @@
 /**
  * Challenge Context Provider
- * Manages challenge state and actions throughout the app
+ * Manages the single 21-day challenge state throughout the app
  */
 
+import {
+  DAILY_CHALLENGES,
+  getDayChallenge
+} from '@/constants/challenges'
+import { useChallengeStorage } from '@/hooks/use-challenge-storage'
+import {
+  CurrentDayState,
+  DailyChallenge,
+  DayProgress,
+  MintedBadge,
+  UserProgress,
+  UserStats,
+} from '@/types/challenges'
+import { useMobileWallet } from '@wallet-ui/react-native-web3js'
 import {
   createContext,
   type PropsWithChildren,
   use,
-  useMemo,
   useCallback,
+  useMemo,
 } from 'react'
-import { useMobileWallet } from '@wallet-ui/react-native-web3js'
-import { useChallengeStorage } from '@/hooks/use-challenge-storage'
-import {
-  Challenge,
-  ChallengeProgress,
-  UserProgress,
-  ActiveChallengeState,
-  UserStats,
-  MintedBadge,
-} from '@/types/challenges'
-import {
-  CHALLENGES,
-  getChallengeById,
-  getAvailableChallenges,
-} from '@/constants/challenges'
 
 export interface ChallengeContextState {
   // Data
   userProgress: UserProgress | null
-  challenges: Challenge[]
-  activeChallenge: ActiveChallengeState | null
-  availableChallenges: Challenge[]
-  completedChallenges: Challenge[]
+  currentDay: number
+  currentDayChallenge: DailyChallenge | null
+  currentDayState: CurrentDayState | null
+  allDays: DailyChallenge[]
   stats: UserStats
 
   // Loading states
@@ -40,14 +39,19 @@ export interface ChallengeContextState {
   error: Error | null
 
   // Actions
-  startChallenge: (challengeId: number) => Promise<void>
-  completeDay: (challengeId: number, day: number) => Promise<void>
-  markBadgeMinted: (challengeId: number, badge: MintedBadge) => Promise<void>
-  getChallengeProgress: (challengeId: number) => ChallengeProgress | null
-  getChallengeStatus: (
-    challengeId: number
-  ) => 'locked' | 'available' | 'active' | 'completed'
+  navigateToDay: (day: number) => Promise<void>
+  completeDay: (day: number) => Promise<void>
+  uncompleteDay: (day: number) => Promise<void>
+  markBadgeMinted: (day: number, badge: MintedBadge) => Promise<void>
+  resetProgress: () => Promise<void>
   refreshProgress: () => Promise<void>
+
+  // Helpers
+  getDayProgress: (day: number) => DayProgress | null
+  isDayCompleted: (day: number) => boolean
+  isDayMinted: (day: number) => boolean
+  canCompleteDayToday: (day: number) => boolean
+  getUnmintedCompletedDays: () => DailyChallenge[]
 }
 
 const Context = createContext<ChallengeContextState>(
@@ -70,212 +74,168 @@ export function ChallengeProvider({ children }: PropsWithChildren) {
     progress: userProgress,
     isLoading,
     error,
-    getChallengeProgress,
-    startChallenge: startChallengeStorage,
+    getDayProgress,
+    navigateToDay: navigateToDayStorage,
     completeDay: completeDayStorage,
+    uncompleteDay: uncompleteDayStorage,
     markBadgeMinted: markBadgeMintedStorage,
+    resetProgress: resetProgressStorage,
     refreshProgress,
+    canCompleteDayToday,
   } = useChallengeStorage(walletAddress)
 
-  // Get active challenge
-  const activeChallenge = useMemo((): ActiveChallengeState | null => {
-    if (!userProgress) return null
+  // Current day being viewed
+  const currentDay = userProgress?.currentDay ?? 1
 
-    const activeProg = userProgress.challengeProgress.find(
-      (cp) => cp.status === 'active'
+  // Current day's challenge data
+  const currentDayChallenge = useMemo(() => {
+    return getDayChallenge(currentDay) ?? null
+  }, [currentDay])
+
+  // Current day state for UI
+  const currentDayState = useMemo((): CurrentDayState | null => {
+    if (!userProgress || !currentDayChallenge) return null
+
+    const dayProgress = userProgress.daysProgress.find(
+      (dp) => dp.day === currentDay
     )
-
-    if (!activeProg) return null
-
-    const challenge = getChallengeById(activeProg.challengeId)
-    if (!challenge) return null
-
-    const completedDays = activeProg.daysCompleted.length
-    const todayTask =
-      completedDays < 21 ? challenge.days[completedDays] : null
-
-    // Check if user can complete today (hasn't already completed today)
-    const today = new Date().toDateString()
-    const lastCompletion =
-      activeProg.daysCompleted.length > 0
-        ? new Date(
-            activeProg.daysCompleted[
-              activeProg.daysCompleted.length - 1
-            ].completedAt || ''
-          ).toDateString()
-        : null
-
-    const canCompleteToday = lastCompletion !== today && completedDays < 21
+    if (!dayProgress) return null
 
     return {
-      challenge,
-      progress: activeProg,
-      todayTask,
-      daysRemaining: 21 - completedDays,
-      progressPercentage: Math.round((completedDays / 21) * 100),
-      canCompleteToday,
+      challenge: currentDayChallenge,
+      progress: dayProgress,
+      canCompleteToday: !dayProgress.completed,
+      canMint: dayProgress.completed && !dayProgress.badgeMinted,
     }
-  }, [userProgress])
+  }, [userProgress, currentDayChallenge, currentDay])
 
-  // Get completed challenge IDs
-  const completedChallengeIds = useMemo(() => {
-    if (!userProgress) return []
-    return userProgress.challengeProgress
-      .filter((cp) => cp.status === 'completed')
-      .map((cp) => cp.challengeId)
-  }, [userProgress])
-
-  // Get available challenges
-  const availableChallenges = useMemo(() => {
-    return getAvailableChallenges(completedChallengeIds)
-  }, [completedChallengeIds])
-
-  // Get completed challenges
-  const completedChallenges = useMemo(() => {
-    return CHALLENGES.filter((c) => completedChallengeIds.includes(c.id))
-  }, [completedChallengeIds])
-
-  // Get challenge status
-  const getChallengeStatus = useCallback(
-    (challengeId: number): 'locked' | 'available' | 'active' | 'completed' => {
-      if (!userProgress) {
-        // First challenge is always available
-        return challengeId === 1 ? 'available' : 'locked'
-      }
-
-      const progress = userProgress.challengeProgress.find(
-        (cp) => cp.challengeId === challengeId
-      )
-
-      if (progress) {
-        return progress.status
-      }
-
-      // Check if available
-      const challenge = getChallengeById(challengeId)
-      if (!challenge) return 'locked'
-
-      if (challenge.requiredChallengeId === null) {
-        return 'available'
-      }
-
-      const isPrereqComplete = completedChallengeIds.includes(
-        challenge.requiredChallengeId
-      )
-
-      return isPrereqComplete ? 'available' : 'locked'
+  // Check if day is completed
+  const isDayCompleted = useCallback(
+    (day: number): boolean => {
+      if (!userProgress) return false
+      const dayProgress = userProgress.daysProgress.find((dp) => dp.day === day)
+      return dayProgress?.completed ?? false
     },
-    [userProgress, completedChallengeIds]
+    [userProgress]
   )
+
+  // Check if day's badge is minted
+  const isDayMinted = useCallback(
+    (day: number): boolean => {
+      if (!userProgress) return false
+      const dayProgress = userProgress.daysProgress.find((dp) => dp.day === day)
+      return dayProgress?.badgeMinted ?? false
+    },
+    [userProgress]
+  )
+
+  // Get unminted completed days
+  const getUnmintedCompletedDays = useCallback((): DailyChallenge[] => {
+    if (!userProgress) return []
+
+    return userProgress.daysProgress
+      .filter((dp) => dp.completed && !dp.badgeMinted)
+      .map((dp) => getDayChallenge(dp.day))
+      .filter((c): c is DailyChallenge => c !== undefined)
+  }, [userProgress])
 
   // Calculate stats
   const stats = useMemo((): UserStats => {
     if (!userProgress) {
       return {
-        challengesCompleted: 0,
-        challengesInProgress: 0,
-        totalDaysCompleted: 0,
+        daysCompleted: 0,
+        badgesMinted: 0,
+        totalSOLSpent: 0,
         currentStreak: 0,
         longestStreak: 0,
-        totalSOLSpent: 0,
-        badgesCollected: 0,
         completionRate: 0,
       }
     }
 
-    const challengesCompleted = userProgress.totalChallengesCompleted
-    const challengesInProgress = userProgress.challengeProgress.filter(
-      (cp) => cp.status === 'active'
-    ).length
-
-    // Calculate total SOL spent on mints
-    const totalSOLSpent = userProgress.badges.reduce((sum, badge) => {
-      const challenge = getChallengeById(badge.challengeId)
-      return sum + (challenge?.mintFee || 0)
-    }, 0)
-
-    // Calculate completion rate
-    const totalDaysAttempted = userProgress.challengeProgress.reduce(
-      (sum, cp) => {
-        if (cp.status === 'completed') return sum + 21
-        if (cp.status === 'active') return sum + (cp.currentDay - 1)
-        return sum
-      },
-      0
-    )
-
-    const completionRate =
-      totalDaysAttempted > 0
-        ? Math.round(
-            (userProgress.totalDaysCompleted / totalDaysAttempted) * 100
-          )
-        : 0
-
     return {
-      challengesCompleted,
-      challengesInProgress,
-      totalDaysCompleted: userProgress.totalDaysCompleted,
+      daysCompleted: userProgress.totalDaysCompleted,
+      badgesMinted: userProgress.totalBadgesMinted,
+      totalSOLSpent: userProgress.totalSOLSpent,
       currentStreak: userProgress.currentStreak,
       longestStreak: userProgress.longestStreak,
-      totalSOLSpent,
-      badgesCollected: userProgress.badges.length,
-      completionRate,
+      completionRate: Math.round((userProgress.totalDaysCompleted / 21) * 100),
     }
   }, [userProgress])
 
-  // Wrap storage actions
-  const startChallenge = useCallback(
-    async (challengeId: number) => {
-      await startChallengeStorage(challengeId)
+  // Wrapped actions
+  const navigateToDay = useCallback(
+    async (day: number) => {
+      await navigateToDayStorage(day)
     },
-    [startChallengeStorage]
+    [navigateToDayStorage]
   )
 
   const completeDay = useCallback(
-    async (challengeId: number, day: number) => {
-      await completeDayStorage(challengeId, day)
+    async (day: number) => {
+      await completeDayStorage(day)
     },
     [completeDayStorage]
   )
 
+  const uncompleteDay = useCallback(
+    async (day: number) => {
+      await uncompleteDayStorage(day)
+    },
+    [uncompleteDayStorage]
+  )
+
   const markBadgeMinted = useCallback(
-    async (challengeId: number, badge: MintedBadge) => {
-      await markBadgeMintedStorage(challengeId, badge)
+    async (day: number, badge: MintedBadge) => {
+      await markBadgeMintedStorage(day, badge)
     },
     [markBadgeMintedStorage]
   )
 
+  const resetProgress = useCallback(async () => {
+    await resetProgressStorage()
+  }, [resetProgressStorage])
+
   const value: ChallengeContextState = useMemo(
     () => ({
       userProgress,
-      challenges: CHALLENGES,
-      activeChallenge,
-      availableChallenges,
-      completedChallenges,
+      currentDay,
+      currentDayChallenge,
+      currentDayState,
+      allDays: DAILY_CHALLENGES,
       stats,
       isLoading,
       error,
-      startChallenge,
+      navigateToDay,
       completeDay,
+      uncompleteDay,
       markBadgeMinted,
-      getChallengeProgress,
-      getChallengeStatus,
+      resetProgress,
       refreshProgress,
+      getDayProgress,
+      isDayCompleted,
+      isDayMinted,
+      canCompleteDayToday,
+      getUnmintedCompletedDays,
     }),
     [
       userProgress,
-      activeChallenge,
-      availableChallenges,
-      completedChallenges,
+      currentDay,
+      currentDayChallenge,
+      currentDayState,
       stats,
       isLoading,
       error,
-      startChallenge,
+      navigateToDay,
       completeDay,
+      uncompleteDay,
       markBadgeMinted,
-      getChallengeProgress,
-      getChallengeStatus,
+      resetProgress,
       refreshProgress,
+      getDayProgress,
+      isDayCompleted,
+      isDayMinted,
+      canCompleteDayToday,
+      getUnmintedCompletedDays,
     ]
   )
 

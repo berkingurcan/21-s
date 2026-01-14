@@ -1,43 +1,38 @@
 /**
  * Challenge Progress Storage Hook
- * Handles persisting and loading challenge progress from AsyncStorage
+ * Handles persisting and loading day-based challenge progress from AsyncStorage
  */
 
-import { useCallback, useEffect, useState } from 'react'
+import { getMintFeeForDay } from '@/constants/challenges'
+import { DayProgress, MintedBadge, UserProgress } from '@/types/challenges'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import {
-  UserProgress,
-  ChallengeProgress,
-  ChallengeStatus,
-  DayProgress,
-  MintedBadge,
-} from '@/types/challenges'
+import { useCallback, useEffect, useState } from 'react'
 
-const STORAGE_KEY = '@21s_user_progress'
+const STORAGE_KEY = '@21s_user_progress_v2' // New version for new data structure
 
-// Initialize empty progress for a challenge
-export const createEmptyChallengeProgress = (
-  challengeId: number
-): ChallengeProgress => ({
-  challengeId,
-  status: 'locked',
-  startedAt: null,
+/**
+ * Initialize empty day progress
+ */
+const createEmptyDayProgress = (day: number): DayProgress => ({
+  day,
+  completed: false,
   completedAt: null,
-  currentDay: 0,
-  daysCompleted: [],
   badgeMinted: false,
-  badgeMintTx: null,
+  mintTx: null,
 })
 
-// Initialize empty user progress
+/**
+ * Initialize empty user progress
+ */
 const createEmptyUserProgress = (walletAddress: string): UserProgress => ({
   walletAddress,
-  challengeProgress: [],
-  totalChallengesCompleted: 0,
+  currentDay: 1,
+  daysProgress: Array.from({ length: 21 }, (_, i) => createEmptyDayProgress(i + 1)),
   totalDaysCompleted: 0,
+  totalBadgesMinted: 0,
+  totalSOLSpent: 0,
   currentStreak: 0,
   longestStreak: 0,
-  badges: [],
   createdAt: new Date().toISOString(),
   lastActiveAt: new Date().toISOString(),
 })
@@ -47,7 +42,9 @@ export function useChallengeStorage(walletAddress: string | undefined) {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<Error | null>(null)
 
-  // Load progress from storage
+  /**
+   * Load progress from storage
+   */
   const loadProgress = useCallback(async () => {
     if (!walletAddress) {
       setProgress(null)
@@ -82,7 +79,9 @@ export function useChallengeStorage(walletAddress: string | undefined) {
     }
   }, [walletAddress])
 
-  // Save progress to storage
+  /**
+   * Save progress to storage
+   */
   const saveProgress = useCallback(
     async (newProgress: UserProgress) => {
       if (!walletAddress) return
@@ -107,115 +106,67 @@ export function useChallengeStorage(walletAddress: string | undefined) {
     [walletAddress]
   )
 
-  // Get progress for a specific challenge
-  const getChallengeProgress = useCallback(
-    (challengeId: number): ChallengeProgress | null => {
+  /**
+   * Get progress for a specific day
+   */
+  const getDayProgress = useCallback(
+    (day: number): DayProgress | null => {
       if (!progress) return null
-      return (
-        progress.challengeProgress.find((cp) => cp.challengeId === challengeId) ||
-        null
-      )
+      return progress.daysProgress.find((dp) => dp.day === day) || null
     },
     [progress]
   )
 
-  // Start a challenge
-  const startChallenge = useCallback(
-    async (challengeId: number) => {
-      if (!progress) return
-
-      const existingIndex = progress.challengeProgress.findIndex(
-        (cp) => cp.challengeId === challengeId
-      )
-
-      const newChallengeProgress: ChallengeProgress = {
-        ...createEmptyChallengeProgress(challengeId),
-        status: 'active',
-        startedAt: new Date().toISOString(),
-        currentDay: 1,
-      }
-
-      const updatedChallengeProgress = [...progress.challengeProgress]
-
-      if (existingIndex >= 0) {
-        updatedChallengeProgress[existingIndex] = newChallengeProgress
-      } else {
-        updatedChallengeProgress.push(newChallengeProgress)
-      }
+  /**
+   * Navigate to a specific day
+   */
+  const navigateToDay = useCallback(
+    async (day: number) => {
+      if (!progress || day < 1 || day > 21) return
 
       await saveProgress({
         ...progress,
-        challengeProgress: updatedChallengeProgress,
+        currentDay: day,
       })
     },
     [progress, saveProgress]
   )
 
-  // Complete a day
+  /**
+   * Complete a day
+   */
   const completeDay = useCallback(
-    async (challengeId: number, dayNumber: number) => {
-      if (!progress) return
+    async (day: number) => {
+      if (!progress || day < 1 || day > 21) return
 
-      const challengeIndex = progress.challengeProgress.findIndex(
-        (cp) => cp.challengeId === challengeId
-      )
+      const dayIndex = progress.daysProgress.findIndex((dp) => dp.day === day)
+      if (dayIndex < 0) return
 
-      if (challengeIndex < 0) return
+      // Check if already completed
+      if (progress.daysProgress[dayIndex].completed) return
 
-      const challengeProg = { ...progress.challengeProgress[challengeIndex] }
-
-      // Add day completion
-      const dayProgress: DayProgress = {
-        day: dayNumber,
-        status: 'completed',
+      const updatedDaysProgress = [...progress.daysProgress]
+      updatedDaysProgress[dayIndex] = {
+        ...updatedDaysProgress[dayIndex],
+        completed: true,
         completedAt: new Date().toISOString(),
       }
 
-      // Check if day already completed
-      const existingDayIndex = challengeProg.daysCompleted.findIndex(
-        (d) => d.day === dayNumber
-      )
-
-      if (existingDayIndex >= 0) {
-        challengeProg.daysCompleted[existingDayIndex] = dayProgress
-      } else {
-        challengeProg.daysCompleted = [
-          ...challengeProg.daysCompleted,
-          dayProgress,
-        ]
-      }
-
-      // Update current day
-      const completedDays = challengeProg.daysCompleted.length
-      challengeProg.currentDay = Math.min(completedDays + 1, 21)
-
-      // Check if challenge completed
-      if (completedDays >= 21) {
-        challengeProg.status = 'completed'
-        challengeProg.completedAt = new Date().toISOString()
-      }
-
-      const updatedChallengeProgress = [...progress.challengeProgress]
-      updatedChallengeProgress[challengeIndex] = challengeProg
-
-      // Update totals
-      const totalDaysCompleted = updatedChallengeProgress.reduce(
-        (sum, cp) => sum + cp.daysCompleted.length,
-        0
-      )
-      const totalChallengesCompleted = updatedChallengeProgress.filter(
-        (cp) => cp.status === 'completed'
+      // Calculate totals
+      const totalDaysCompleted = updatedDaysProgress.filter(
+        (dp) => dp.completed
       ).length
 
-      // Calculate streak (simplified - consecutive days)
-      const currentStreak = calculateStreak(updatedChallengeProgress)
-      const longestStreak = Math.max(currentStreak, progress.longestStreak)
+      // Calculate streak
+      const { currentStreak, longestStreak } = calculateStreak(
+        updatedDaysProgress,
+        progress.longestStreak
+      )
 
       await saveProgress({
         ...progress,
-        challengeProgress: updatedChallengeProgress,
+        daysProgress: updatedDaysProgress,
         totalDaysCompleted,
-        totalChallengesCompleted,
         currentStreak,
         longestStreak,
       })
@@ -223,73 +174,106 @@ export function useChallengeStorage(walletAddress: string | undefined) {
     [progress, saveProgress]
   )
 
-  // Mark badge as minted
+  /**
+   * Uncomplete a day (toggle off)
+   */
+  const uncompleteDay = useCallback(
+    async (day: number) => {
+      if (!progress || day < 1 || day > 21) return
+
+      const dayIndex = progress.daysProgress.findIndex((dp) => dp.day === day)
+      if (dayIndex < 0) return
+
+      // Can't uncomplete if already minted
+      if (progress.daysProgress[dayIndex].badgeMinted) return
+
+      const updatedDaysProgress = [...progress.daysProgress]
+      updatedDaysProgress[dayIndex] = {
+        ...updatedDaysProgress[dayIndex],
+        completed: false,
+        completedAt: null,
+      }
+
+      const totalDaysCompleted = updatedDaysProgress.filter(
+        (dp) => dp.completed
+      ).length
+
+      const { currentStreak, longestStreak } = calculateStreak(
+        updatedDaysProgress,
+        progress.longestStreak
+      )
+
+      await saveProgress({
+        ...progress,
+        daysProgress: updatedDaysProgress,
+        totalDaysCompleted,
+        currentStreak,
+        longestStreak,
+      })
+    },
+    [progress, saveProgress]
+  )
+
+  /**
+   * Mark day's badge as minted
+   */
   const markBadgeMinted = useCallback(
-    async (challengeId: number, badge: MintedBadge) => {
-      if (!progress) return
+    async (day: number, badge: MintedBadge) => {
+      if (!progress || day < 1 || day > 21) return
 
-      const challengeIndex = progress.challengeProgress.findIndex(
-        (cp) => cp.challengeId === challengeId
-      )
+      const dayIndex = progress.daysProgress.findIndex((dp) => dp.day === day)
+      if (dayIndex < 0) return
 
-      if (challengeIndex < 0) return
-
-      const updatedChallengeProgress = [...progress.challengeProgress]
-      updatedChallengeProgress[challengeIndex] = {
-        ...updatedChallengeProgress[challengeIndex],
+      const updatedDaysProgress = [...progress.daysProgress]
+      updatedDaysProgress[dayIndex] = {
+        ...updatedDaysProgress[dayIndex],
         badgeMinted: true,
-        badgeMintTx: badge.transactionSignature,
+        mintTx: badge.transactionSignature,
       }
 
-      const updatedBadges = [...progress.badges, badge]
+      const totalBadgesMinted = updatedDaysProgress.filter(
+        (dp) => dp.badgeMinted
+      ).length
+
+      const mintFee = getMintFeeForDay(day)
+      const totalSOLSpent = progress.totalSOLSpent + mintFee
 
       await saveProgress({
         ...progress,
-        challengeProgress: updatedChallengeProgress,
-        badges: updatedBadges,
+        daysProgress: updatedDaysProgress,
+        totalBadgesMinted,
+        totalSOLSpent,
       })
     },
     [progress, saveProgress]
   )
 
-  // Unlock a challenge (make it available)
-  const unlockChallenge = useCallback(
-    async (challengeId: number) => {
-      if (!progress) return
-
-      const existingIndex = progress.challengeProgress.findIndex(
-        (cp) => cp.challengeId === challengeId
-      )
-
-      const updatedChallengeProgress = [...progress.challengeProgress]
-
-      if (existingIndex >= 0) {
-        updatedChallengeProgress[existingIndex] = {
-          ...updatedChallengeProgress[existingIndex],
-          status: 'available',
-        }
-      } else {
-        updatedChallengeProgress.push({
-          ...createEmptyChallengeProgress(challengeId),
-          status: 'available',
-        })
-      }
-
-      await saveProgress({
-        ...progress,
-        challengeProgress: updatedChallengeProgress,
-      })
-    },
-    [progress, saveProgress]
-  )
-
-  // Reset progress (for testing/development)
+  /**
+   * Reset all progress
+   */
   const resetProgress = useCallback(async () => {
     if (!walletAddress) return
 
     const newProgress = createEmptyUserProgress(walletAddress)
     await saveProgress(newProgress)
   }, [walletAddress, saveProgress])
+
+  /**
+   * Check if a day can be completed today (not already completed today)
+   */
+  const canCompleteDayToday = useCallback(
+    (day: number): boolean => {
+      if (!progress) return false
+
+      const dayProgress = progress.daysProgress.find((dp) => dp.day === day)
+      if (!dayProgress) return false
+
+      // Already completed = can't complete again (unless we want to allow toggle)
+      // For flexibility, users can complete any day at any time
+      return !dayProgress.completed
+    },
+    [progress]
+  )
 
   // Load progress on mount and wallet change
   useEffect(() => {
@@ -300,39 +284,40 @@ export function useChallengeStorage(walletAddress: string | undefined) {
     progress,
     isLoading,
     error,
-    getChallengeProgress,
-    startChallenge,
+    getDayProgress,
+    navigateToDay,
     completeDay,
+    uncompleteDay,
     markBadgeMinted,
-    unlockChallenge,
     resetProgress,
+    canCompleteDayToday,
     refreshProgress: loadProgress,
   }
 }
 
-// Helper to calculate current streak
-function calculateStreak(challengeProgress: ChallengeProgress[]): number {
-  // Get all completed days across all challenges
-  const allDays: Date[] = []
+/**
+ * Calculate current streak based on completed days
+ * Streak = consecutive days from the most recent completion going backwards
+ */
+function calculateStreak(
+  daysProgress: DayProgress[],
+  previousLongest: number
+): { currentStreak: number; longestStreak: number } {
+  // Get all completed days with timestamps
+  const completedDays = daysProgress
+    .filter((dp) => dp.completed && dp.completedAt)
+    .map((dp) => new Date(dp.completedAt!))
+    .sort((a, b) => b.getTime() - a.getTime()) // Most recent first
 
-  challengeProgress.forEach((cp) => {
-    cp.daysCompleted.forEach((day) => {
-      if (day.completedAt) {
-        allDays.push(new Date(day.completedAt))
-      }
-    })
-  })
-
-  if (allDays.length === 0) return 0
-
-  // Sort by date descending
-  allDays.sort((a, b) => b.getTime() - a.getTime())
+  if (completedDays.length === 0) {
+    return { currentStreak: 0, longestStreak: previousLongest }
+  }
 
   // Check if most recent is today or yesterday
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
-  const mostRecent = new Date(allDays[0])
+  const mostRecent = new Date(completedDays[0])
   mostRecent.setHours(0, 0, 0, 0)
 
   const daysDiff = Math.floor(
@@ -340,13 +325,15 @@ function calculateStreak(challengeProgress: ChallengeProgress[]): number {
   )
 
   // Streak broken if more than 1 day gap
-  if (daysDiff > 1) return 0
+  if (daysDiff > 1) {
+    return { currentStreak: 0, longestStreak: previousLongest }
+  }
 
   // Count consecutive days
-  let streak = 1
-  for (let i = 1; i < allDays.length; i++) {
-    const current = new Date(allDays[i - 1])
-    const prev = new Date(allDays[i])
+  let currentStreak = 1
+  for (let i = 1; i < completedDays.length; i++) {
+    const current = new Date(completedDays[i - 1])
+    const prev = new Date(completedDays[i])
     current.setHours(0, 0, 0, 0)
     prev.setHours(0, 0, 0, 0)
 
@@ -355,12 +342,14 @@ function calculateStreak(challengeProgress: ChallengeProgress[]): number {
     )
 
     if (diff === 1) {
-      streak++
+      currentStreak++
     } else if (diff > 1) {
       break
     }
     // If diff === 0, same day, continue checking
   }
 
-  return streak
+  const longestStreak = Math.max(currentStreak, previousLongest)
+
+  return { currentStreak, longestStreak }
 }

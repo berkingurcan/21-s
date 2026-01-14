@@ -1,15 +1,13 @@
 /**
- * Challenges Screen
- * Browse and select challenges by tier
+ * Days Screen (formerly Challenges)
+ * Shows all 21 days in a grid with completion and mint status
  */
 
 import { AppPage } from '@/components/app-page'
 import { AppText } from '@/components/app-text'
-import { ChallengeCard } from '@/components/challenge/challenge-card'
 import { useChallenge } from '@/components/challenge/challenge-provider'
-import { getChallengesByTier } from '@/constants/challenges'
-import { Colors, TierColors } from '@/constants/colors'
-import { ChallengeTier } from '@/types/challenges'
+import { UiIconSymbol } from '@/components/ui/ui-icon-symbol'
+import { Colors } from '@/constants/colors'
 import { useRouter } from 'expo-router'
 import React, { useState } from 'react'
 import {
@@ -20,44 +18,21 @@ import {
   View,
 } from 'react-native'
 
-import { UiIconSymbol } from '@/components/ui/ui-icon-symbol'
-
-const TIERS: ChallengeTier[] = ['beginner', 'intermediate', 'advanced', 'master']
-
-const TIER_INFO: Record<ChallengeTier, { label: string; description: string }> = {
-  beginner: {
-    label: 'Beginner',
-    description: 'Foundation building - 0.02 SOL/badge',
-  },
-  intermediate: {
-    label: 'Intermediate',
-    description: 'Skill development - 0.03-0.04 SOL/badge',
-  },
-  advanced: {
-    label: 'Advanced',
-    description: 'Advanced techniques - 0.05-0.06 SOL/badge',
-  },
-  master: {
-    label: 'Master',
-    description: 'Complete mastery - 0.07 SOL/badge',
-  },
-}
-
-export default function ChallengesScreen() {
+export default function DaysScreen() {
   const router = useRouter()
   const colors = Colors.dark
+
   const {
-    challenges,
-    getChallengeStatus,
-    getChallengeProgress,
-    startChallenge,
-    activeChallenge,
-    isLoading,
+    allDays,
+    currentDay,
+    stats,
+    isDayCompleted,
+    isDayMinted,
+    navigateToDay,
     refreshProgress,
   } = useChallenge()
 
   const [isRefreshing, setIsRefreshing] = useState(false)
-  const [selectedTier, setSelectedTier] = useState<ChallengeTier | 'all'>('all')
 
   const handleRefresh = async () => {
     setIsRefreshing(true)
@@ -65,12 +40,12 @@ export default function ChallengesScreen() {
     setIsRefreshing(false)
   }
 
-  const handleChallengePress = (challengeId: number) => {
-    router.push(`/(tabs)/challenges/${challengeId}`)
+  const handleDayPress = (day: number) => {
+    navigateToDay(day)
+    router.push('/(tabs)/home')
   }
 
-  const filteredChallenges =
-    selectedTier === 'all' ? challenges : getChallengesByTier(selectedTier)
+  const progressPercent = Math.round((stats.daysCompleted / 21) * 100)
 
   return (
     <AppPage>
@@ -90,185 +65,147 @@ export default function ChallengesScreen() {
             onPress={() => router.push('/(tabs)/home')}
             style={styles.backButton}
           >
-            <UiIconSymbol
-              name="chevron.left"
-              size={20}
-              color={colors.textMuted}
-            />
+            <UiIconSymbol name="chevron.left" size={20} color={colors.textMuted} />
             <AppText style={[styles.backText, { color: colors.textMuted }]}>
-              Home
+              Today
             </AppText>
           </TouchableOpacity>
           <AppText type="title" style={{ color: colors.text, marginTop: 12 }}>
-            Challenges
+            21 Days
           </AppText>
           <AppText style={[styles.subtitle, { color: colors.textMuted }]}>
-            21 progressive challenges to master social skills
+            Your confidence transformation journey
           </AppText>
         </View>
 
-        {/* Tier Filter */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.filterContainer}
-          contentContainerStyle={styles.filterContent}
-        >
-          <TouchableOpacity
-            onPress={() => setSelectedTier('all')}
-            style={[
-              styles.filterChip,
-              {
-                backgroundColor:
-                  selectedTier === 'all' ? colors.accent : colors.surface,
-                borderColor:
-                  selectedTier === 'all' ? colors.accent : colors.border,
-              },
-            ]}
-          >
-            <AppText
-              style={[
-                styles.filterText,
-                {
-                  color: selectedTier === 'all' ? '#FFFFFF' : colors.textMuted,
-                },
-              ]}
-            >
-              All ({challenges.length})
-            </AppText>
-          </TouchableOpacity>
+        {/* Progress Summary */}
+        <View style={[styles.progressCard, { backgroundColor: colors.surface }]}>
+          <View style={styles.progressRow}>
+            <View style={styles.progressStat}>
+              <AppText style={[styles.progressValue, { color: colors.success }]}>
+                {stats.daysCompleted}
+              </AppText>
+              <AppText style={[styles.progressLabel, { color: colors.textMuted }]}>
+                Completed
+              </AppText>
+            </View>
+            <View style={styles.progressStat}>
+              <AppText style={[styles.progressValue, { color: colors.accent }]}>
+                {stats.badgesMinted}
+              </AppText>
+              <AppText style={[styles.progressLabel, { color: colors.textMuted }]}>
+                Minted
+              </AppText>
+            </View>
+            <View style={styles.progressStat}>
+              <AppText style={[styles.progressValue, { color: colors.text }]}>
+                {progressPercent}%
+              </AppText>
+              <AppText style={[styles.progressLabel, { color: colors.textMuted }]}>
+                Progress
+              </AppText>
+            </View>
+          </View>
+        </View>
 
-          {TIERS.map((tier) => {
-            const tierChallenges = getChallengesByTier(tier)
-            const isSelected = selectedTier === tier
+        {/* Legend */}
+        <View style={styles.legend}>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendDot, { backgroundColor: colors.success }]} />
+            <AppText style={{ color: colors.textMuted, fontSize: 12 }}>Completed</AppText>
+          </View>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendDot, { backgroundColor: colors.accent }]} />
+            <AppText style={{ color: colors.textMuted, fontSize: 12 }}>Current</AppText>
+          </View>
+          <View style={styles.legendItem}>
+            <UiIconSymbol name="trophy.fill" size={14} color={colors.warning} />
+            <AppText style={{ color: colors.textMuted, fontSize: 12 }}>Minted</AppText>
+          </View>
+        </View>
+
+        {/* Days Grid */}
+        <View style={styles.daysGrid}>
+          {allDays.map((dayChallenge) => {
+            const isCompleted = isDayCompleted(dayChallenge.day)
+            const isMinted = isDayMinted(dayChallenge.day)
+            const isCurrent = dayChallenge.day === currentDay
 
             return (
               <TouchableOpacity
-                key={tier}
-                onPress={() => setSelectedTier(tier)}
+                key={dayChallenge.day}
+                onPress={() => handleDayPress(dayChallenge.day)}
                 style={[
-                  styles.filterChip,
+                  styles.dayCard,
                   {
-                    backgroundColor: isSelected
-                      ? TierColors[tier]
-                      : colors.surface,
-                    borderColor: isSelected ? TierColors[tier] : colors.border,
+                    backgroundColor: isCurrent
+                      ? colors.accentGlow
+                      : isCompleted
+                        ? colors.successMuted
+                        : colors.surface,
+                    borderColor: isCurrent
+                      ? colors.accent
+                      : isCompleted
+                        ? colors.success
+                        : colors.border,
                   },
                 ]}
+                activeOpacity={0.7}
               >
+                <View style={styles.dayCardHeader}>
+                  <AppText
+                    style={[
+                      styles.dayNumber,
+                      {
+                        color: isCurrent
+                          ? colors.accent
+                          : isCompleted
+                            ? colors.success
+                            : colors.text,
+                      },
+                    ]}
+                  >
+                    {dayChallenge.day}
+                  </AppText>
+                  {isMinted && (
+                    <UiIconSymbol name="trophy.fill" size={14} color={colors.warning} />
+                  )}
+                  {!isMinted && isCompleted && (
+                    <UiIconSymbol name="checkmark.circle.fill" size={16} color={colors.success} />
+                  )}
+                </View>
                 <AppText
-                  style={[
-                    styles.filterText,
-                    {
-                      color: isSelected ? '#FFFFFF' : colors.textMuted,
-                    },
-                  ]}
+                  style={[styles.dayTitle, { color: colors.textMuted }]}
+                  numberOfLines={1}
                 >
-                  {TIER_INFO[tier].label} ({tierChallenges.length})
+                  {dayChallenge.title}
                 </AppText>
               </TouchableOpacity>
             )
           })}
-        </ScrollView>
+        </View>
 
-        {/* Active Challenge Banner */}
-        {activeChallenge && (
-          <TouchableOpacity
-            onPress={() => router.push('/(tabs)/home')}
-            style={[
-              styles.activeBanner,
-              {
-                backgroundColor: colors.accentGlow,
-                borderColor: colors.accent,
-              },
-            ]}
-            activeOpacity={0.8}
-          >
-            <View style={styles.activeBannerContent}>
-              <AppText style={[styles.activeLabel, { color: colors.accent }]}>
-                ACTIVE CHALLENGE
-              </AppText>
-              <AppText
-                type="defaultSemiBold"
-                style={{ color: colors.text }}
-              >
-                {activeChallenge.challenge.title}
-              </AppText>
-              <AppText style={{ color: colors.textMuted, fontSize: 13 }}>
-                Day {activeChallenge.progress.daysCompleted.length + 1} of 21
-              </AppText>
-            </View>
-            <View
-              style={[
-                styles.activeBadge,
-                { backgroundColor: colors.accent },
-              ]}
-            >
-              <AppText style={styles.activeBadgeText}>
-                {activeChallenge.progressPercentage}%
-              </AppText>
-            </View>
-          </TouchableOpacity>
-        )}
-
-        {/* Tier Sections */}
-        {selectedTier === 'all' ? (
-          // Show all tiers with headers
-          TIERS.map((tier) => {
-            const tierChallenges = getChallengesByTier(tier)
-
-            return (
-              <View key={tier} style={styles.tierSection}>
-                <View style={styles.tierHeader}>
-                  <View
-                    style={[
-                      styles.tierBadge,
-                      { backgroundColor: TierColors[tier] + '20' },
-                    ]}
-                  >
-                    <AppText
-                      style={[styles.tierLabel, { color: TierColors[tier] }]}
-                    >
-                      {TIER_INFO[tier].label.toUpperCase()}
-                    </AppText>
-                  </View>
-                  <AppText style={{ color: colors.textMuted, fontSize: 13 }}>
-                    {TIER_INFO[tier].description}
-                  </AppText>
-                </View>
-
-                {tierChallenges.map((challenge) => (
-                  <ChallengeCard
-                    key={challenge.id}
-                    challenge={challenge}
-                    progress={getChallengeProgress(challenge.id)}
-                    status={getChallengeStatus(challenge.id)}
-                    onPress={() => handleChallengePress(challenge.id)}
-                  />
-                ))}
-              </View>
-            )
-          })
-        ) : (
-          // Show filtered challenges
-          <View style={styles.challengeList}>
-            <View style={styles.tierHeader}>
-              <AppText style={{ color: colors.textMuted, fontSize: 13 }}>
-                {TIER_INFO[selectedTier].description}
-              </AppText>
-            </View>
-
-            {filteredChallenges.map((challenge) => (
-              <ChallengeCard
-                key={challenge.id}
-                challenge={challenge}
-                progress={getChallengeProgress(challenge.id)}
-                status={getChallengeStatus(challenge.id)}
-                onPress={() => handleChallengePress(challenge.id)}
-              />
-            ))}
+        {/* Week Labels */}
+        <View style={styles.weekLabels}>
+          <View style={[styles.weekLabel, { backgroundColor: colors.surfaceAlt }]}>
+            <AppText style={{ color: colors.textMuted, fontSize: 12, fontWeight: '600' }}>
+              Week 1: Foundation
+            </AppText>
+            <AppText style={{ color: colors.textSubtle, fontSize: 11 }}>Days 1-7</AppText>
           </View>
-        )}
+          <View style={[styles.weekLabel, { backgroundColor: colors.surfaceAlt }]}>
+            <AppText style={{ color: colors.textMuted, fontSize: 12, fontWeight: '600' }}>
+              Week 2: Building
+            </AppText>
+            <AppText style={{ color: colors.textSubtle, fontSize: 11 }}>Days 8-14</AppText>
+          </View>
+          <View style={[styles.weekLabel, { backgroundColor: colors.surfaceAlt }]}>
+            <AppText style={{ color: colors.textMuted, fontSize: 12, fontWeight: '600' }}>
+              Week 3: Mastery
+            </AppText>
+            <AppText style={{ color: colors.textSubtle, fontSize: 11 }}>Days 15-21</AppText>
+          </View>
+        </View>
 
         {/* Bottom Spacing */}
         <View style={{ height: 20 }} />
@@ -286,7 +223,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
     marginBottom: 4,
-    marginLeft: -4, // compensate for padding
+    marginLeft: -4,
     alignSelf: 'flex-start',
   },
   backText: {
@@ -298,73 +235,78 @@ const styles = StyleSheet.create({
     marginTop: 6,
     lineHeight: 22,
   },
-  filterContainer: {
-    marginBottom: 16,
-    marginHorizontal: -16,
-  },
-  filterContent: {
-    paddingHorizontal: 16,
-    gap: 10,
-  },
-  filterChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 20,
-    borderWidth: 1,
-  },
-  filterText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  activeBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 16,
+  progressCard: {
+    padding: 20,
     borderRadius: 16,
-    borderWidth: 1,
-    marginBottom: 20,
+    marginBottom: 16,
   },
-  activeBannerContent: {
-    flex: 1,
+  progressRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
   },
-  activeLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 1,
-    marginBottom: 4,
-  },
-  activeBadge: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
+  progressStat: {
     alignItems: 'center',
-    justifyContent: 'center',
   },
-  activeBadgeText: {
-    color: '#FFFFFF',
-    fontSize: 14,
+  progressValue: {
+    fontSize: 28,
     fontWeight: '800',
   },
-  tierSection: {
-    marginBottom: 24,
-  },
-  tierHeader: {
-    marginBottom: 12,
-    gap: 8,
-  },
-  tierBadge: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-  },
-  tierLabel: {
+  progressLabel: {
     fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 1,
+    marginTop: 4,
   },
-  challengeList: {
-    marginTop: 8,
+  legend: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 20,
+    marginBottom: 16,
+  },
+  legendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  legendDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+  daysGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 10,
+    marginBottom: 20,
+  },
+  dayCard: {
+    width: '18.5%',
+    aspectRatio: 1,
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 8,
+    justifyContent: 'space-between',
+  },
+  dayCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  dayNumber: {
+    fontSize: 18,
+    fontWeight: '800',
+  },
+  dayTitle: {
+    fontSize: 9,
+    fontWeight: '500',
+  },
+  weekLabels: {
+    gap: 10,
+  },
+  weekLabel: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 14,
+    borderRadius: 12,
   },
 })

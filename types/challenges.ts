@@ -1,64 +1,27 @@
 /**
  * 21-S Challenge App Type Definitions
+ * Single 21-Day Challenge with Daily NFT Minting
  */
-
-// Challenge difficulty tiers
-export type ChallengeTier = 'beginner' | 'intermediate' | 'advanced' | 'master'
-
-// Badge rarity levels
-export type BadgeRarity = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary'
-
-// Challenge status
-export type ChallengeStatus = 'locked' | 'available' | 'active' | 'completed'
-
-// Day completion status
-export type DayStatus = 'pending' | 'completed' | 'missed'
 
 /**
- * Challenge definition from JSON
+ * Daily challenge task
  */
-export interface Challenge {
-  id: number
-  title: string
-  description: string
-  tier: ChallengeTier
+export interface DailyChallenge {
+  day: number // 1-21
+  title: string // Short title for the day
+  task: string // Main task description
+  tip: string // Helpful tip
   mintFee: number // SOL amount (0.02 - 0.07)
-  days: ChallengeDay[]
-  badge: BadgeInfo
-  requiredChallengeId: number | null // Previous challenge that must be completed
+  badge: DailyBadge // NFT info for this day
 }
 
 /**
- * Individual day task within a challenge
+ * Badge/NFT information for a specific day
  */
-export interface ChallengeDay {
-  day: number
-  task: string
-  tip: string
-}
-
-/**
- * Badge/NFT information
- */
-export interface BadgeInfo {
+export interface DailyBadge {
   name: string
   description: string
-  rarity: BadgeRarity
   image: string // URI or local asset path
-}
-
-/**
- * User's progress on a specific challenge
- */
-export interface ChallengeProgress {
-  challengeId: number
-  status: ChallengeStatus
-  startedAt: string | null // ISO date string
-  completedAt: string | null // ISO date string
-  currentDay: number // 0-21
-  daysCompleted: DayProgress[]
-  badgeMinted: boolean
-  badgeMintTx: string | null // Transaction signature
 }
 
 /**
@@ -66,8 +29,10 @@ export interface ChallengeProgress {
  */
 export interface DayProgress {
   day: number
-  status: DayStatus
+  completed: boolean
   completedAt: string | null // ISO date string
+  badgeMinted: boolean
+  mintTx: string | null // Transaction signature
 }
 
 /**
@@ -75,12 +40,13 @@ export interface DayProgress {
  */
 export interface UserProgress {
   walletAddress: string
-  challengeProgress: ChallengeProgress[]
-  totalChallengesCompleted: number
+  currentDay: number // Currently viewing day (1-21)
+  daysProgress: DayProgress[]
   totalDaysCompleted: number
+  totalBadgesMinted: number
+  totalSOLSpent: number
   currentStreak: number
   longestStreak: number
-  badges: MintedBadge[]
   createdAt: string // ISO date string
   lastActiveAt: string // ISO date string
 }
@@ -89,7 +55,7 @@ export interface UserProgress {
  * Minted NFT badge record
  */
 export interface MintedBadge {
-  challengeId: number
+  day: number
   mintAddress: string // NFT mint address
   transactionSignature: string
   mintedAt: string // ISO date string
@@ -121,36 +87,23 @@ export interface BadgeAttribute {
 }
 
 /**
- * Active challenge state for UI
+ * Current day state for UI
  */
-export interface ActiveChallengeState {
-  challenge: Challenge
-  progress: ChallengeProgress
-  todayTask: ChallengeDay | null
-  daysRemaining: number
-  progressPercentage: number
+export interface CurrentDayState {
+  challenge: DailyChallenge
+  progress: DayProgress
   canCompleteToday: boolean
-}
-
-/**
- * Challenge filter/sort options
- */
-export interface ChallengeFilters {
-  tier?: ChallengeTier
-  status?: ChallengeStatus
-  sortBy?: 'id' | 'tier' | 'mintFee'
+  canMint: boolean // completed but not minted
 }
 
 /**
  * Stats for profile display
  */
 export interface UserStats {
-  challengesCompleted: number
-  challengesInProgress: number
-  totalDaysCompleted: number
+  daysCompleted: number
+  badgesMinted: number
+  totalSOLSpent: number
   currentStreak: number
   longestStreak: number
-  totalSOLSpent: number
-  badgesCollected: number
-  completionRate: number // percentage
+  completionRate: number // percentage (daysCompleted / 21 * 100)
 }

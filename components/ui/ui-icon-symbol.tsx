@@ -13,9 +13,29 @@ export type UiIconSymbolName = keyof typeof MAPPING
  * - see SF Symbols in the [SF Symbols](https://developer.apple.com/sf-symbols/) app.
  */
 const MAPPING = {
+  // Navigation & UI
   'gearshape.fill': 'settings',
-  'wallet.pass.fill': 'wallet',
+  'wallet.pass.fill': 'account-balance-wallet',
   'ladybug.fill': 'bug-report',
+  'chevron.left': 'chevron-left',
+  'chevron.right': 'chevron-right',
+  'arrow.uturn.backward': 'undo',
+  'play.fill': 'play-arrow',
+
+  // Tab bar icons
+  'flame.fill': 'local-fire-department',
+  'calendar': 'calendar-today',
+  'person.crop.circle.fill': 'account-circle',
+
+  // Status icons
+  'checkmark.circle.fill': 'check-circle',
+  'trophy.fill': 'emoji-events',
+  'lightbulb.fill': 'lightbulb',
+  'lock.fill': 'lock',
+
+  // Content icons
+  'list.bullet.rectangle.fill': 'list-alt',
+  'clock.fill': 'access-time',
 } as UiIconMapping
 
 /**

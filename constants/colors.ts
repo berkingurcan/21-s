@@ -34,7 +34,7 @@ export const Colors = {
     // Status colors
     success: '#10B981', // Emerald green - completed
     successMuted: 'rgba(16, 185, 129, 0.15)',
-    warning: '#F59E0B', // Amber - in progress
+    warning: '#F59E0B', // Amber - badges, progress
     warningMuted: 'rgba(245, 158, 11, 0.15)',
     error: '#EF4444', // Red - errors
     errorMuted: 'rgba(239, 68, 68, 0.15)',
@@ -83,15 +83,21 @@ export const Colors = {
   },
 }
 
-// Challenge tier colors (based on mint fee progression)
-export const TierColors = {
-  beginner: '#3B82F6', // Blue - 0.02 SOL
-  intermediate: '#8B5CF6', // Purple - 0.03-0.04 SOL
-  advanced: '#F59E0B', // Amber - 0.05-0.06 SOL
-  master: '#EF4444', // Red/Gold - 0.07 SOL
+// Day progress colors (based on week progression)
+export const WeekColors = {
+  week1: '#3B82F6', // Blue - Foundation (Days 1-7)
+  week2: '#8B5CF6', // Purple - Building (Days 8-14)
+  week3: '#F59E0B', // Amber - Mastery (Days 15-21)
 }
 
-// Badge rarity colors
+// Kept for backwards compatibility - can be removed if not used elsewhere
+export const TierColors = {
+  beginner: '#3B82F6',
+  intermediate: '#8B5CF6',
+  advanced: '#F59E0B',
+  master: '#EF4444',
+}
+
 export const BadgeColors = {
   common: '#9BA1A6',
   uncommon: '#3B82F6',

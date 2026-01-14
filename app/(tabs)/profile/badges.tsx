@@ -1,47 +1,46 @@
 /**
  * Badges Gallery Screen
- * Shows all collected NFT badges
+ * Shows all collected NFT badges by day
  */
 
-import React from 'react'
-import { View, StyleSheet, ScrollView } from 'react-native'
 import { AppPage } from '@/components/app-page'
 import { AppText } from '@/components/app-text'
-import { Colors, BadgeColors } from '@/constants/colors'
 import { useChallenge } from '@/components/challenge/challenge-provider'
-import { getChallengeById } from '@/constants/challenges'
 import { UiIconSymbol } from '@/components/ui/ui-icon-symbol'
+import { getDayChallenge } from '@/constants/challenges'
+import { Colors } from '@/constants/colors'
 import { ellipsify } from '@/utils/ellipsify'
+import React from 'react'
+import { ScrollView, StyleSheet, View } from 'react-native'
 
 export default function BadgesScreen() {
   const colors = Colors.dark
   const { userProgress } = useChallenge()
 
-  const badges = userProgress?.badges || []
+  // Get minted days from progress
+  const mintedDays = userProgress?.daysProgress.filter((dp) => dp.badgeMinted) || []
 
   return (
     <AppPage>
       <ScrollView showsVerticalScrollIndicator={false}>
-        {badges.length > 0 ? (
+        {mintedDays.length > 0 ? (
           <View style={styles.badgesGrid}>
-            {badges.map((badge) => {
-              const challenge = getChallengeById(badge.challengeId)
+            {mintedDays.map((dayProgress) => {
+              const challenge = getDayChallenge(dayProgress.day)
               if (!challenge) return null
-
-              const badgeColor = BadgeColors[challenge.badge.rarity]
 
               return (
                 <View
-                  key={badge.mintAddress}
+                  key={dayProgress.day}
                   style={[
                     styles.badgeCard,
                     {
                       backgroundColor: colors.surface,
-                      borderColor: badgeColor,
+                      borderColor: colors.success,
                     },
                   ]}
                 >
-                  <UiIconSymbol name="trophy.fill" size={48} color={badgeColor} />
+                  <UiIconSymbol name="trophy.fill" size={48} color={colors.warning} />
 
                   <AppText
                     style={[styles.badgeName, { color: colors.text }]}
@@ -52,12 +51,12 @@ export default function BadgesScreen() {
 
                   <View
                     style={[
-                      styles.rarityBadge,
-                      { backgroundColor: badgeColor + '20' },
+                      styles.dayBadge,
+                      { backgroundColor: colors.successMuted },
                     ]}
                   >
-                    <AppText style={[styles.rarityText, { color: badgeColor }]}>
-                      {challenge.badge.rarity.toUpperCase()}
+                    <AppText style={[styles.dayText, { color: colors.success }]}>
+                      DAY {challenge.day}
                     </AppText>
                   </View>
 
@@ -66,12 +65,16 @@ export default function BadgesScreen() {
                   </AppText>
 
                   <View style={[styles.mintInfo, { backgroundColor: colors.surfaceAlt }]}>
-                    <AppText style={{ color: colors.textSubtle, fontSize: 11 }}>
-                      TX: {ellipsify(badge.transactionSignature, 6)}
-                    </AppText>
-                    <AppText style={{ color: colors.textSubtle, fontSize: 11 }}>
-                      {new Date(badge.mintedAt).toLocaleDateString()}
-                    </AppText>
+                    {dayProgress.mintTx && (
+                      <AppText style={{ color: colors.textSubtle, fontSize: 11 }}>
+                        TX: {ellipsify(dayProgress.mintTx, 6)}
+                      </AppText>
+                    )}
+                    {dayProgress.completedAt && (
+                      <AppText style={{ color: colors.textSubtle, fontSize: 11 }}>
+                        {new Date(dayProgress.completedAt).toLocaleDateString()}
+                      </AppText>
+                    )}
                   </View>
                 </View>
               )
@@ -84,7 +87,7 @@ export default function BadgesScreen() {
               No Badges Yet
             </AppText>
             <AppText style={{ color: colors.textMuted, textAlign: 'center', marginTop: 8 }}>
-              Complete challenges to earn NFT badges that will appear here.
+              Complete daily challenges and mint your NFT badges.
             </AppText>
           </View>
         )}
@@ -107,18 +110,18 @@ const styles = StyleSheet.create({
     borderWidth: 2,
   },
   badgeName: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '700',
     marginTop: 12,
     textAlign: 'center',
   },
-  rarityBadge: {
+  dayBadge: {
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 6,
     marginTop: 8,
   },
-  rarityText: {
+  dayText: {
     fontSize: 10,
     fontWeight: '700',
     letterSpacing: 0.5,

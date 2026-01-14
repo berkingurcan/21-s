@@ -1,19 +1,22 @@
 /**
- * Home Screen
- * Linear challenge progression - shows current challenge or welcome
+ * Home Screen - Today's Challenge
+ * Shows current day's task, completion button, and mint option
  */
 
+import { useGetBalance } from '@/components/account/use-get-balance'
 import { AppPage } from '@/components/app-page'
 import { AppText } from '@/components/app-text'
 import { useChallenge } from '@/components/challenge/challenge-provider'
-import { DailyTaskCard } from '@/components/challenge/daily-task-card'
+import { formatMintFee, useMintBadge } from '@/components/challenge/use-mint-badge'
 import { UiIconSymbol } from '@/components/ui/ui-icon-symbol'
-import { getChallengeById, getTotalChallenges } from '@/constants/challenges'
-import { Colors, TierColors } from '@/constants/colors'
-import { LinearGradient } from 'expo-linear-gradient'
+import { getMintFeeForDay } from '@/constants/challenges'
+import { Colors } from '@/constants/colors'
+import { PublicKey } from '@solana/web3.js'
+import { useMobileWallet } from '@wallet-ui/react-native-web3js'
 import { useRouter } from 'expo-router'
-import React, { useState } from 'react'
+import React, { useMemo, useState } from 'react'
 import {
+  Alert,
   Dimensions,
   Image,
   RefreshControl,
@@ -28,19 +31,39 @@ const { width } = Dimensions.get('window')
 export default function HomeScreen() {
   const router = useRouter()
   const colors = Colors.dark
+  const { account } = useMobileWallet()
+
   const {
-    activeChallenge,
+    currentDay,
+    currentDayChallenge,
+    currentDayState,
     stats,
-    completedChallenges,
-    startChallenge,
+    navigateToDay,
     completeDay,
-    isLoading,
+    uncompleteDay,
+    markBadgeMinted,
+    isDayCompleted,
+    isDayMinted,
     refreshProgress,
+    isLoading,
   } = useChallenge()
 
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [isCompleting, setIsCompleting] = useState(false)
-  const [isStarting, setIsStarting] = useState(false)
+  const [isMinting, setIsMinting] = useState(false)
+
+  // Safely create PublicKey from address
+  const address = useMemo(() => {
+    if (!account?.address) return null
+    try {
+      return new PublicKey(account.address)
+    } catch {
+      return null
+    }
+  }, [account?.address])
+
+  const { data: balance } = useGetBalance({ address: address! })
+  const mintBadge = useMintBadge({ address: address! })
 
   const handleRefresh = async () => {
     setIsRefreshing(true)
@@ -49,246 +72,91 @@ export default function HomeScreen() {
   }
 
   const handleCompleteDay = async () => {
-    if (!activeChallenge || !activeChallenge.canCompleteToday) return
+    if (!currentDayState || currentDayState.progress.completed) return
 
     setIsCompleting(true)
     try {
-      const dayToComplete = activeChallenge.progress.daysCompleted.length + 1
-      await completeDay(activeChallenge.challenge.id, dayToComplete)
+      await completeDay(currentDay)
     } finally {
       setIsCompleting(false)
     }
   }
 
-  const handleStartChallenge = async () => {
-    // Determine which challenge to start (next available)
-    const nextChallengeId = completedChallenges.length + 1
-    if (nextChallengeId > getTotalChallenges()) return
-
-    setIsStarting(true)
-    try {
-      await startChallenge(nextChallengeId)
-    } finally {
-      setIsStarting(false)
+  const handleUncompleteDay = async () => {
+    if (!currentDayState || !currentDayState.progress.completed) return
+    if (currentDayState.progress.badgeMinted) {
+      Alert.alert('Cannot Undo', 'This day\'s badge has been minted.')
+      return
     }
+
+    await uncompleteDay(currentDay)
   }
 
-  const nextChallenge = getChallengeById(completedChallenges.length + 1)
-  const totalChallenges = getTotalChallenges()
-  const overallProgress = Math.round((completedChallenges.length / totalChallenges) * 100)
+  const handleMintBadge = async () => {
+    console.log('handleMintBadge called')
+    console.log('currentDayState:', currentDayState)
+    console.log('address:', address)
 
-  // ============================================
-  // NO ACTIVE CHALLENGE - Welcome/Start Screen
-  // ============================================
-  if (!activeChallenge) {
-    const isFirstTime = completedChallenges.length === 0
-    const isAllComplete = completedChallenges.length >= totalChallenges
+    if (!currentDayState || !address) {
+      console.log('Early return: no currentDayState or address')
+      return
+    }
+    if (!currentDayState.canMint) {
+      console.log('Early return: canMint is false', currentDayState.canMint)
+      return
+    }
 
-    return (
-      <AppPage>
-        <ScrollView
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
-          refreshControl={
-            <RefreshControl
-              refreshing={isRefreshing}
-              onRefresh={handleRefresh}
-              tintColor={colors.accent}
-            />
-          }
-        >
-          {/* Hero Section */}
-          <View style={styles.heroSection}>
-            <LinearGradient
-              colors={[colors.accentGlow, 'transparent']}
-              style={styles.heroGradient}
-            />
+    const mintFee = getMintFeeForDay(currentDay)
+    const solBalance = balance ? balance / 1e9 : 0
+    console.log('mintFee:', mintFee, 'solBalance:', solBalance)
 
-            <View style={styles.logoContainer}>
-              <Image
-                source={require('@/assets/images/logo.png')}
-                style={styles.logoImage}
-                resizeMode="contain"
-              />
-            </View>
+    if (solBalance < mintFee + 0.001) {
+      Alert.alert(
+        'Insufficient Balance',
+        `You need ${formatMintFee(mintFee)} + network fees to mint this badge.`
+      )
+      return
+    }
 
-            <AppText style={styles.heroTitle}>
-              {isAllComplete ? 'Journey Complete' : isFirstTime ? '21-S' : 'Ready for More?'}
-            </AppText>
-
-            <AppText style={[styles.heroSubtitle, { color: colors.textMuted }]}>
-              {isAllComplete
-                ? 'You have completed all challenges'
-                : isFirstTime
-                  ? '21 Days to Social Mastery'
-                  : `${completedChallenges.length} of ${totalChallenges} challenges complete`}
-            </AppText>
-          </View>
-
-          {/* Progress Overview */}
-          {!isFirstTime && (
-            <View style={[styles.progressOverview, { backgroundColor: colors.surface }]}>
-              <View style={styles.progressHeader}>
-                <AppText style={[styles.progressLabel, { color: colors.textMuted }]}>
-                  OVERALL PROGRESS
-                </AppText>
-                <AppText style={[styles.progressPercent, { color: colors.accent }]}>
-                  {overallProgress}%
-                </AppText>
-              </View>
-              <View style={[styles.progressBarBg, { backgroundColor: colors.border }]}>
-                <View
-                  style={[
-                    styles.progressBarFill,
-                    { width: `${overallProgress}%`, backgroundColor: colors.accent },
-                  ]}
-                />
-              </View>
-              <View style={styles.progressStats}>
-                <View style={styles.progressStatItem}>
-                  <AppText style={[styles.statNumber, { color: colors.text }]}>
-                    {completedChallenges.length}
-                  </AppText>
-                  <AppText style={[styles.statLabel, { color: colors.textMuted }]}>
-                    Completed
-                  </AppText>
-                </View>
-                <View style={styles.progressStatItem}>
-                  <AppText style={[styles.statNumber, { color: colors.text }]}>
-                    {stats.totalDaysCompleted}
-                  </AppText>
-                  <AppText style={[styles.statLabel, { color: colors.textMuted }]}>
-                    Days Done
-                  </AppText>
-                </View>
-                <View style={styles.progressStatItem}>
-                  <AppText style={[styles.statNumber, { color: colors.warning }]}>
-                    {stats.currentStreak}
-                  </AppText>
-                  <AppText style={[styles.statLabel, { color: colors.textMuted }]}>
-                    Streak
-                  </AppText>
-                </View>
-              </View>
-            </View>
-          )}
-
-          {/* Next Challenge Card */}
-          {nextChallenge && !isAllComplete && (
-            <View style={[styles.nextChallengeCard, { backgroundColor: colors.surface }]}>
-              <View style={styles.nextChallengeHeader}>
-                <View
-                  style={[
-                    styles.tierBadge,
-                    { backgroundColor: TierColors[nextChallenge.tier] + '20' },
-                  ]}
-                >
-                  <AppText
-                    style={[styles.tierText, { color: TierColors[nextChallenge.tier] }]}
-                  >
-                    {nextChallenge.tier.toUpperCase()}
-                  </AppText>
-                </View>
-                <AppText style={[styles.challengeNumber, { color: colors.textMuted }]}>
-                  Challenge {nextChallenge.id}/{totalChallenges}
-                </AppText>
-              </View>
-
-              <AppText style={[styles.challengeTitle, { color: colors.text }]}>
-                {nextChallenge.title}
-              </AppText>
-
-              <AppText style={[styles.challengeDesc, { color: colors.textMuted }]}>
-                {nextChallenge.description}
-              </AppText>
-
-              <View style={[styles.challengeInfo, { backgroundColor: colors.surfaceAlt }]}>
-                <View style={styles.infoItem}>
-                  <UiIconSymbol name="calendar" size={18} color={colors.textMuted} />
-                  <AppText style={{ color: colors.textMuted }}>21 Days</AppText>
-                </View>
-                <View style={styles.infoItem}>
-                  <UiIconSymbol name="clock.fill" size={18} color={colors.textMuted} />
-                  <AppText style={{ color: colors.textMuted }}>~30 min/day</AppText>
-                </View>
-              </View>
-
-              <TouchableOpacity
-                onPress={handleStartChallenge}
-                disabled={isStarting}
-                style={[styles.startButton, { backgroundColor: colors.accent }]}
-                activeOpacity={0.8}
-              >
-                {isStarting ? (
-                  <AppText style={styles.startButtonText}>Starting...</AppText>
-                ) : (
-                  <>
-                    <UiIconSymbol name="play.fill" size={20} color="#FFFFFF" />
-                    <AppText style={styles.startButtonText}>
-                      {isFirstTime ? 'Begin Your Journey' : 'Start Challenge'}
-                    </AppText>
-                  </>
-                )}
-              </TouchableOpacity>
-            </View>
-          )}
-
-          {/* All Complete Message */}
-          {isAllComplete && (
-            <View style={[styles.completeCard, { backgroundColor: colors.successMuted }]}>
-              <UiIconSymbol name="trophy.fill" size={48} color={colors.success} />
-              <AppText style={[styles.completeTitle, { color: colors.success }]}>
-                Sigma Ascended
-              </AppText>
-              <AppText style={{ color: colors.textMuted, textAlign: 'center' }}>
-                You have completed all 21 challenges. You are the master of your social destiny.
-              </AppText>
-            </View>
-          )}
-
-          {/* Features (first time only) */}
-          {isFirstTime && (
-            <View style={styles.featuresSection}>
-              <FeatureItem
-                icon="list.bullet.rectangle.fill"
-                title="21 Progressive Challenges"
-                description="From basic eye contact to complete social mastery"
-                colors={colors}
-              />
-              <FeatureItem
-                icon="trophy.fill"
-                title="NFT Achievement Badges"
-                description="Earn collectible badges as you progress"
-                colors={colors}
-              />
-              <FeatureItem
-                icon="flame.fill"
-                title="Daily Micro-Tasks"
-                description="Just 30 minutes per day to transform"
-                colors={colors}
-              />
-            </View>
-          )}
-        </ScrollView>
-      </AppPage>
+    Alert.alert(
+      'Mint Badge',
+      `Mint Day ${currentDay} badge for ${formatMintFee(mintFee)}?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Mint',
+          onPress: async () => {
+            setIsMinting(true)
+            try {
+              const result = await mintBadge.mutateAsync({ day: currentDay })
+              await markBadgeMinted(currentDay, result.badge)
+              Alert.alert('Success!', `Day ${currentDay} badge minted!`)
+            } catch (error) {
+              Alert.alert('Error', 'Failed to mint badge. Please try again.')
+            } finally {
+              setIsMinting(false)
+            }
+          },
+        },
+      ]
     )
   }
 
-  // ============================================
-  // ACTIVE CHALLENGE - Daily Task View
-  // ============================================
-  const { challenge, progress, todayTask, progressPercentage, canCompleteToday } =
-    activeChallenge
-  const completedDays = progress.daysCompleted.length
-  const tierColor = TierColors[challenge.tier]
+  const handlePreviousDay = () => {
+    if (currentDay > 1) {
+      navigateToDay(currentDay - 1)
+    }
+  }
 
-  const isTodayCompleted =
-    completedDays > 0 &&
-    new Date(
-      progress.daysCompleted[completedDays - 1].completedAt || ''
-    ).toDateString() === new Date().toDateString()
+  const handleNextDay = () => {
+    if (currentDay < 21) {
+      navigateToDay(currentDay + 1)
+    }
+  }
 
-  const isChallengeComplete = completedDays >= 21
+  const progressPercent = Math.round((stats.daysCompleted / 21) * 100)
+  const isCurrentDayCompleted = isDayCompleted(currentDay)
+  const isCurrentDayMinted = isDayMinted(currentDay)
 
   return (
     <AppPage>
@@ -303,156 +171,239 @@ export default function HomeScreen() {
           />
         }
       >
-        {/* Challenge Header */}
-        <View style={styles.challengeHeader}>
-          <View style={styles.challengeHeaderTop}>
-            <View style={[styles.tierBadge, { backgroundColor: tierColor + '20' }]}>
-              <AppText style={[styles.tierText, { color: tierColor }]}>
-                {challenge.tier.toUpperCase()}
-              </AppText>
-            </View>
-            <AppText style={[styles.challengeNumber, { color: colors.textMuted }]}>
-              {completedChallenges.length + 1}/{totalChallenges}
-            </AppText>
-          </View>
-
-          <AppText style={[styles.activeTitle, { color: colors.text }]}>
-            {challenge.title}
-          </AppText>
-
-          <TouchableOpacity
-            onPress={() => router.push('/(tabs)/home/challenge-detail')}
-            style={styles.viewDetailsButton}
-            activeOpacity={0.6}
-          >
-            <AppText style={[styles.viewDetailsText, { color: colors.textMuted }]}>
-              View All Tasks
-            </AppText>
-            <UiIconSymbol
-              name="chevron.right"
-              size={14}
-              color={colors.textMuted}
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.headerLeft}>
+            <Image
+              source={require('@/assets/images/logo.png')}
+              style={styles.logo}
+              resizeMode="contain"
             />
-          </TouchableOpacity>
+            <AppText style={styles.headerTitle}>21-S</AppText>
+          </View>
+          <View style={styles.headerRight}>
+            <View style={[styles.dayBadge, { backgroundColor: colors.accent }]}>
+              <AppText style={styles.dayBadgeText}>Day {currentDay}</AppText>
+            </View>
+          </View>
         </View>
 
-        {/* Progress Ring Section */}
-        <View style={[styles.progressRingSection, { backgroundColor: colors.surface }]}>
-          <View style={styles.progressRingContainer}>
-            {/* Custom Progress Ring */}
-            <View style={styles.ringOuter}>
-              <View
-                style={[
-                  styles.ringProgress,
-                  {
-                    borderColor: isChallengeComplete ? colors.success : colors.accent,
-                    transform: [{ rotate: `${(progressPercentage / 100) * 360}deg` }],
-                  },
-                ]}
-              />
-              <View style={[styles.ringInner, { backgroundColor: colors.surface }]}>
-                <AppText style={[styles.ringNumber, { color: colors.text }]}>
-                  {completedDays}
-                </AppText>
-                <AppText style={[styles.ringLabel, { color: colors.textMuted }]}>
-                  of 21
-                </AppText>
-              </View>
-            </View>
+        {/* Progress Bar */}
+        <View style={[styles.progressSection, { backgroundColor: colors.surface }]}>
+          <View style={styles.progressHeader}>
+            <AppText style={[styles.progressLabel, { color: colors.textMuted }]}>
+              YOUR JOURNEY
+            </AppText>
+            <AppText style={[styles.progressPercent, { color: colors.accent }]}>
+              {stats.daysCompleted}/21 Days
+            </AppText>
           </View>
-
-          <View style={styles.progressRingStats}>
-            <View style={styles.ringStatItem}>
-              <AppText style={[styles.ringStatNumber, { color: colors.text }]}>
-                {21 - completedDays}
-              </AppText>
-              <AppText style={[styles.ringStatLabel, { color: colors.textMuted }]}>
-                Days Left
-              </AppText>
-            </View>
-            <View style={styles.ringStatItem}>
-              <AppText style={[styles.ringStatNumber, { color: colors.warning }]}>
+          <View style={[styles.progressBarBg, { backgroundColor: colors.border }]}>
+            <View
+              style={[
+                styles.progressBarFill,
+                { width: `${progressPercent}%`, backgroundColor: colors.accent },
+              ]}
+            />
+          </View>
+          <View style={styles.statsRow}>
+            <View style={styles.statItem}>
+              <AppText style={[styles.statNumber, { color: colors.warning }]}>
                 {stats.currentStreak}
               </AppText>
-              <AppText style={[styles.ringStatLabel, { color: colors.textMuted }]}>
+              <AppText style={[styles.statLabel, { color: colors.textMuted }]}>
                 Streak
               </AppText>
             </View>
-          </View>
-        </View>
-
-        {/* Today's Task */}
-        {todayTask && !isChallengeComplete && (
-          <DailyTaskCard
-            day={completedDays + 1}
-            task={todayTask}
-            canComplete={canCompleteToday}
-            isCompleted={isTodayCompleted}
-            onComplete={handleCompleteDay}
-            isLoading={isCompleting}
-          />
-        )}
-
-        {/* Challenge Complete */}
-        {isChallengeComplete && (
-          <View style={[styles.challengeCompleteCard, { backgroundColor: colors.successMuted }]}>
-            <UiIconSymbol name="checkmark.circle.fill" size={48} color={colors.success} />
-            <AppText style={[styles.challengeCompleteTitle, { color: colors.success }]}>
-              Challenge Complete!
-            </AppText>
-            <AppText style={{ color: colors.textMuted, textAlign: 'center' }}>
-              You've completed all 21 days of {challenge.title}.
-              Mint your badge in Profile to claim your NFT!
-            </AppText>
-          </View>
-        )}
-
-        {/* Badge Preview */}
-        <View style={[styles.badgePreviewCard, { backgroundColor: colors.surface }]}>
-          <UiIconSymbol name="trophy.fill" size={28} color={colors.warning} />
-          <View style={styles.badgePreviewInfo}>
-            <AppText style={[styles.badgePreviewName, { color: colors.text }]}>
-              {challenge.badge.name}
-            </AppText>
-            <AppText style={{ color: colors.textMuted, fontSize: 13 }}>
-              {isChallengeComplete ? 'Ready to mint!' : 'Complete challenge to earn'}
-            </AppText>
-          </View>
-          {isChallengeComplete && (
-            <View style={[styles.mintReadyBadge, { backgroundColor: colors.successMuted }]}>
-              <AppText style={{ color: colors.success, fontSize: 11, fontWeight: '700' }}>
-                READY
+            <View style={styles.statItem}>
+              <AppText style={[styles.statNumber, { color: colors.success }]}>
+                {stats.badgesMinted}
+              </AppText>
+              <AppText style={[styles.statLabel, { color: colors.textMuted }]}>
+                Minted
               </AppText>
             </View>
-          )}
+            <View style={styles.statItem}>
+              <AppText style={[styles.statNumber, { color: colors.text }]}>
+                {progressPercent}%
+              </AppText>
+              <AppText style={[styles.statLabel, { color: colors.textMuted }]}>
+                Complete
+              </AppText>
+            </View>
+          </View>
         </View>
+
+        {/* Today's Challenge Card */}
+        {currentDayChallenge && (
+          <View style={[styles.challengeCard, { backgroundColor: colors.surface }]}>
+            <View style={styles.challengeHeader}>
+              <View>
+                <AppText style={[styles.challengeLabel, { color: colors.accent }]}>
+                  TODAY'S CHALLENGE
+                </AppText>
+                <AppText style={[styles.challengeTitle, { color: colors.text }]}>
+                  {currentDayChallenge.title}
+                </AppText>
+              </View>
+              {isCurrentDayCompleted && (
+                <View style={[styles.completedBadge, { backgroundColor: colors.successMuted }]}>
+                  <UiIconSymbol name="checkmark.circle.fill" size={16} color={colors.success} />
+                  <AppText style={{ color: colors.success, fontWeight: '600', fontSize: 12 }}>
+                    Done
+                  </AppText>
+                </View>
+              )}
+            </View>
+
+            <AppText style={[styles.challengeTask, { color: colors.text }]}>
+              {currentDayChallenge.task}
+            </AppText>
+
+            <View style={[styles.tipBox, { backgroundColor: colors.surfaceAlt }]}>
+              <UiIconSymbol name="lightbulb.fill" size={16} color={colors.warning} />
+              <AppText style={[styles.tipText, { color: colors.textMuted }]}>
+                {currentDayChallenge.tip}
+              </AppText>
+            </View>
+
+            {/* Complete Button */}
+            {!isCurrentDayCompleted ? (
+              <TouchableOpacity
+                onPress={handleCompleteDay}
+                disabled={isCompleting}
+                style={[styles.completeButton, { backgroundColor: colors.accent }]}
+                activeOpacity={0.8}
+              >
+                <UiIconSymbol name="checkmark.circle" size={22} color="#FFFFFF" />
+                <AppText style={styles.completeButtonText}>
+                  {isCompleting ? 'Completing...' : 'Mark Complete'}
+                </AppText>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                onPress={handleUncompleteDay}
+                disabled={isCurrentDayMinted}
+                style={[styles.undoButton, {
+                  backgroundColor: isCurrentDayMinted ? colors.border : colors.surfaceAlt
+                }]}
+                activeOpacity={0.8}
+              >
+                <UiIconSymbol
+                  name="arrow.uturn.backward"
+                  size={18}
+                  color={isCurrentDayMinted ? colors.textSubtle : colors.textMuted}
+                />
+                <AppText style={{
+                  color: isCurrentDayMinted ? colors.textSubtle : colors.textMuted,
+                  fontWeight: '600'
+                }}>
+                  {isCurrentDayMinted ? 'Minted - Cannot Undo' : 'Undo Completion'}
+                </AppText>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
+
+        {/* Mint Badge Card */}
+        {currentDayChallenge && (
+          <View style={[styles.mintCard, {
+            backgroundColor: isCurrentDayCompleted && !isCurrentDayMinted
+              ? colors.accentGlow
+              : colors.surface,
+            borderColor: isCurrentDayCompleted && !isCurrentDayMinted
+              ? colors.accent
+              : colors.border,
+          }]}>
+            <View style={styles.mintHeader}>
+              <UiIconSymbol
+                name="trophy.fill"
+                size={28}
+                color={isCurrentDayMinted ? colors.success : colors.warning}
+              />
+              <View style={styles.mintInfo}>
+                <AppText style={[styles.mintBadgeName, { color: colors.text }]}>
+                  {currentDayChallenge.badge.name}
+                </AppText>
+                <AppText style={{ color: colors.textMuted, fontSize: 13 }}>
+                  {isCurrentDayMinted
+                    ? 'Already minted ✓'
+                    : isCurrentDayCompleted
+                      ? 'Ready to mint!'
+                      : 'Complete the task to unlock'}
+                </AppText>
+              </View>
+            </View>
+
+            {!isCurrentDayMinted && (
+              <TouchableOpacity
+                onPress={handleMintBadge}
+                disabled={!isCurrentDayCompleted || isMinting}
+                style={[styles.mintButton, {
+                  backgroundColor: isCurrentDayCompleted ? colors.accent : colors.border
+                }]}
+                activeOpacity={0.8}
+              >
+                <AppText style={[styles.mintButtonText, {
+                  color: isCurrentDayCompleted ? '#FFFFFF' : colors.textSubtle
+                }]}>
+                  {isMinting
+                    ? 'Minting...'
+                    : 'Mint Early NFT of The Challenge'}
+                </AppText>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
+
+        {/* Day Navigation */}
+        <View style={styles.dayNavigation}>
+          <TouchableOpacity
+            onPress={handlePreviousDay}
+            disabled={currentDay <= 1}
+            style={[styles.navButton, {
+              backgroundColor: colors.surface,
+              opacity: currentDay <= 1 ? 0.5 : 1
+            }]}
+          >
+            <UiIconSymbol name="chevron.left" size={20} color={colors.text} />
+            <AppText style={{ color: colors.text }}>Day {currentDay - 1}</AppText>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => router.push('/(tabs)/challenges')}
+            style={[styles.allDaysButton, { backgroundColor: colors.surfaceAlt }]}
+          >
+            <AppText style={{ color: colors.accent, fontWeight: '600' }}>All Days</AppText>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={handleNextDay}
+            disabled={currentDay >= 21}
+            style={[styles.navButton, {
+              backgroundColor: colors.surface,
+              opacity: currentDay >= 21 ? 0.5 : 1
+            }]}
+          >
+            <AppText style={{ color: colors.text }}>Day {currentDay + 1}</AppText>
+            <UiIconSymbol name="chevron.right" size={20} color={colors.text} />
+          </TouchableOpacity>
+        </View>
+
+        {/* All Complete Message */}
+        {stats.daysCompleted >= 21 && (
+          <View style={[styles.completeCard, { backgroundColor: colors.successMuted }]}>
+            <UiIconSymbol name="trophy.fill" size={48} color={colors.success} />
+            <AppText style={[styles.completeTitle, { color: colors.success }]}>
+              Journey Complete!
+            </AppText>
+            <AppText style={{ color: colors.textMuted, textAlign: 'center' }}>
+              You've completed all 21 days. You are now a social master!
+            </AppText>
+          </View>
+        )}
       </ScrollView>
     </AppPage>
-  )
-}
-
-// Feature Item Component
-function FeatureItem({
-  icon,
-  title,
-  description,
-  colors,
-}: {
-  icon: string
-  title: string
-  description: string
-  colors: typeof Colors.dark
-}) {
-  return (
-    <View style={[styles.featureItem, { backgroundColor: colors.surface }]}>
-      <View style={[styles.featureIcon, { backgroundColor: colors.accentGlow }]}>
-        <UiIconSymbol name={icon as any} size={24} color={colors.accent} />
-      </View>
-      <View style={styles.featureContent}>
-        <AppText style={[styles.featureTitle, { color: colors.text }]}>{title}</AppText>
-        <AppText style={{ color: colors.textMuted, fontSize: 13 }}>{description}</AppText>
-      </View>
-    </View>
   )
 }
 
@@ -460,44 +411,41 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: 20,
   },
-  // Hero Section
-  heroSection: {
-    alignItems: 'center',
-    paddingVertical: 32,
-    position: 'relative',
-  },
-  heroGradient: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 200,
-    borderRadius: 100,
-  },
-  logoContainer: {
-    width: 140,
-    height: 140,
-    justifyContent: 'center',
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 16,
   },
-  logoImage: {
-    width: '100%',
-    height: '100%',
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
   },
-  heroTitle: {
-    fontSize: 36,
+  logo: {
+    width: 36,
+    height: 36,
+  },
+  headerTitle: {
+    fontSize: 24,
     fontWeight: '800',
     color: '#ECEDEE',
-    letterSpacing: 1,
   },
-  heroSubtitle: {
-    fontSize: 16,
-    marginTop: 8,
-    textAlign: 'center',
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  // Progress Overview
-  progressOverview: {
+  dayBadge: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  dayBadgeText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: 14,
+  },
+  progressSection: {
     padding: 20,
     borderRadius: 20,
     marginBottom: 16,
@@ -514,83 +462,82 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   progressPercent: {
-    fontSize: 18,
-    fontWeight: '800',
+    fontSize: 16,
+    fontWeight: '700',
   },
   progressBarBg: {
-    height: 8,
-    borderRadius: 4,
+    height: 10,
+    borderRadius: 5,
     overflow: 'hidden',
   },
   progressBarFill: {
     height: '100%',
-    borderRadius: 4,
+    borderRadius: 5,
   },
-  progressStats: {
+  statsRow: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    marginTop: 20,
+    marginTop: 16,
   },
-  progressStatItem: {
+  statItem: {
     alignItems: 'center',
   },
   statNumber: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '800',
   },
   statLabel: {
     fontSize: 12,
     marginTop: 2,
   },
-  // Next Challenge Card
-  nextChallengeCard: {
+  challengeCard: {
     padding: 24,
     borderRadius: 24,
     marginBottom: 16,
   },
-  nextChallengeHeader: {
+  challengeHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: 16,
   },
-  tierBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-  },
-  tierText: {
+  challengeLabel: {
     fontSize: 11,
     fontWeight: '700',
     letterSpacing: 1,
-  },
-  challengeNumber: {
-    fontSize: 14,
-    fontWeight: '600',
+    marginBottom: 4,
   },
   challengeTitle: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: '800',
-    marginBottom: 8,
   },
-  challengeDesc: {
-    fontSize: 15,
-    lineHeight: 22,
-    marginBottom: 20,
-  },
-  challengeInfo: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    padding: 16,
-    borderRadius: 14,
-    marginBottom: 20,
-  },
-  infoItem: {
+  completedBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
   },
-  startButton: {
+  challengeTask: {
+    fontSize: 17,
+    lineHeight: 26,
+    marginBottom: 16,
+  },
+  tipBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    padding: 14,
+    borderRadius: 12,
+    marginBottom: 20,
+  },
+  tipText: {
+    flex: 1,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  completeButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -598,159 +545,78 @@ const styles = StyleSheet.create({
     paddingVertical: 18,
     borderRadius: 16,
   },
-  startButtonText: {
+  completeButtonText: {
     color: '#FFFFFF',
     fontSize: 17,
     fontWeight: '700',
   },
-  // Complete Card
+  undoButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 14,
+    borderRadius: 12,
+  },
+  mintCard: {
+    padding: 20,
+    borderRadius: 20,
+    borderWidth: 1,
+    marginBottom: 16,
+  },
+  mintHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    marginBottom: 16,
+  },
+  mintInfo: {
+    flex: 1,
+  },
+  mintBadgeName: {
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 2,
+  },
+  mintButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    borderRadius: 12,
+  },
+  mintButtonText: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  dayNavigation: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 16,
+  },
+  navButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+  },
+  allDaysButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+  },
   completeCard: {
     padding: 32,
     borderRadius: 24,
     alignItems: 'center',
-    marginBottom: 16,
   },
   completeTitle: {
     fontSize: 24,
     fontWeight: '800',
     marginTop: 16,
     marginBottom: 8,
-  },
-  // Features Section
-  featuresSection: {
-    gap: 12,
-    marginTop: 8,
-  },
-  featureItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderRadius: 16,
-    gap: 16,
-  },
-  featureIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  featureContent: {
-    flex: 1,
-  },
-  featureTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    marginBottom: 2,
-  },
-  // Active Challenge Styles
-  challengeHeader: {
-    marginBottom: 16,
-  },
-  challengeHeaderTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  activeTitle: {
-    fontSize: 32,
-    fontWeight: '800',
-  },
-  viewDetailsButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 8,
-    gap: 4,
-    alignSelf: 'flex-start',
-  },
-  viewDetailsText: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  progressRingSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 24,
-    borderRadius: 24,
-    marginBottom: 16,
-    gap: 24,
-  },
-  progressRingContainer: {
-    alignItems: 'center',
-  },
-  ringOuter: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    borderWidth: 10,
-    borderColor: '#1E1E28',
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
-  },
-  ringProgress: {
-    position: 'absolute',
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    borderWidth: 10,
-    borderTopColor: 'transparent',
-    borderRightColor: 'transparent',
-    borderBottomColor: 'transparent',
-  },
-  ringInner: {
-    alignItems: 'center',
-  },
-  ringNumber: {
-    fontSize: 36,
-    fontWeight: '800',
-  },
-  ringLabel: {
-    fontSize: 13,
-  },
-  progressRingStats: {
-    flex: 1,
-    gap: 20,
-  },
-  ringStatItem: {},
-  ringStatNumber: {
-    fontSize: 28,
-    fontWeight: '800',
-  },
-  ringStatLabel: {
-    fontSize: 13,
-    marginTop: 2,
-  },
-  challengeCompleteCard: {
-    padding: 24,
-    borderRadius: 20,
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  challengeCompleteTitle: {
-    fontSize: 22,
-    fontWeight: '800',
-    marginTop: 12,
-    marginBottom: 8,
-  },
-  badgePreviewCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 18,
-    borderRadius: 16,
-    gap: 16,
-  },
-  badgePreviewInfo: {
-    flex: 1,
-  },
-  badgePreviewName: {
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  mintReadyBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
   },
 })

@@ -1,33 +1,38 @@
 /**
  * Daily Task Card Component
- * Shows today's challenge task with completion checkbox
+ * Shows a day's challenge task with completion and mint options
  */
 
-import React from 'react'
-import { View, StyleSheet, TouchableOpacity, Animated } from 'react-native'
 import { AppText } from '@/components/app-text'
-import { Colors } from '@/constants/colors'
-import { ChallengeDay } from '@/types/challenges'
 import { UiIconSymbol } from '@/components/ui/ui-icon-symbol'
+import { Colors } from '@/constants/colors'
+import { DailyChallenge, DayProgress } from '@/types/challenges'
+import React from 'react'
+import { StyleSheet, TouchableOpacity, View } from 'react-native'
+import { formatMintFee } from './use-mint-badge'
 
 interface DailyTaskCardProps {
-  day: number
-  task: ChallengeDay
-  canComplete: boolean
-  isCompleted: boolean
+  challenge: DailyChallenge
+  progress: DayProgress
   onComplete: () => void
-  isLoading?: boolean
+  onMint?: () => void
+  isCompleting?: boolean
+  isMinting?: boolean
 }
 
 export function DailyTaskCard({
-  day,
-  task,
-  canComplete,
-  isCompleted,
+  challenge,
+  progress,
   onComplete,
-  isLoading = false,
+  onMint,
+  isCompleting = false,
+  isMinting = false,
 }: DailyTaskCardProps) {
   const colors = Colors.dark
+
+  const isCompleted = progress.completed
+  const isMinted = progress.badgeMinted
+  const canMint = isCompleted && !isMinted
 
   return (
     <View
@@ -42,87 +47,87 @@ export function DailyTaskCard({
     >
       {/* Day Header */}
       <View style={styles.header}>
-        <View style={styles.dayBadge}>
+        <View style={styles.dayInfo}>
           <AppText style={[styles.dayLabel, { color: colors.textMuted }]}>
             DAY
           </AppText>
           <AppText style={[styles.dayNumber, { color: colors.text }]}>
-            {day}
+            {challenge.day}
           </AppText>
         </View>
 
-        {isCompleted ? (
-          <View style={[styles.completedBadge, { backgroundColor: colors.successMuted }]}>
-            <UiIconSymbol
-              name="checkmark.circle.fill"
-              size={18}
-              color={colors.success}
-            />
-            <AppText style={[styles.completedText, { color: colors.success }]}>
-              COMPLETED
-            </AppText>
-          </View>
-        ) : (
-          <View style={[styles.todayBadge, { backgroundColor: colors.accentGlow }]}>
-            <UiIconSymbol name="flame.fill" size={16} color={colors.accent} />
-            <AppText style={[styles.todayText, { color: colors.accent }]}>
-              TODAY
-            </AppText>
-          </View>
-        )}
+        <View style={styles.headerRight}>
+          {isMinted ? (
+            <View style={[styles.statusBadge, { backgroundColor: colors.successMuted }]}>
+              <UiIconSymbol name="trophy.fill" size={16} color={colors.warning} />
+              <AppText style={[styles.statusText, { color: colors.success }]}>
+                MINTED
+              </AppText>
+            </View>
+          ) : isCompleted ? (
+            <View style={[styles.statusBadge, { backgroundColor: colors.successMuted }]}>
+              <UiIconSymbol name="checkmark.circle.fill" size={16} color={colors.success} />
+              <AppText style={[styles.statusText, { color: colors.success }]}>
+                DONE
+              </AppText>
+            </View>
+          ) : (
+            <View style={[styles.statusBadge, { backgroundColor: colors.accentGlow }]}>
+              <UiIconSymbol name="flame.fill" size={16} color={colors.accent} />
+              <AppText style={[styles.statusText, { color: colors.accent }]}>
+                TODAY
+              </AppText>
+            </View>
+          )}
+        </View>
       </View>
+
+      {/* Title */}
+      <AppText style={[styles.title, { color: colors.text }]}>
+        {challenge.title}
+      </AppText>
 
       {/* Task Content */}
-      <View style={styles.taskContent}>
-        <AppText type="subtitle" style={{ color: colors.text }}>
-          {task.task}
-        </AppText>
-      </View>
+      <AppText style={[styles.task, { color: colors.text }]}>
+        {challenge.task}
+      </AppText>
 
       {/* Tip Section */}
-      <View
-        style={[styles.tipSection, { backgroundColor: colors.surfaceAlt }]}
-      >
-        <UiIconSymbol
-          name="lightbulb.fill"
-          size={16}
-          color={colors.warning}
-        />
+      <View style={[styles.tipSection, { backgroundColor: colors.surfaceAlt }]}>
+        <UiIconSymbol name="lightbulb.fill" size={16} color={colors.warning} />
         <AppText style={[styles.tipText, { color: colors.textMuted }]}>
-          {task.tip}
+          {challenge.tip}
         </AppText>
       </View>
 
-      {/* Complete Button */}
-      {!isCompleted && (
-        <TouchableOpacity
-          onPress={onComplete}
-          disabled={!canComplete || isLoading}
-          style={[
-            styles.completeButton,
-            {
-              backgroundColor: canComplete ? colors.accent : colors.border,
-              opacity: canComplete && !isLoading ? 1 : 0.5,
-            },
-          ]}
-          activeOpacity={0.8}
-        >
-          {isLoading ? (
-            <AppText style={styles.buttonText}>Completing...</AppText>
-          ) : (
-            <>
-              <UiIconSymbol
-                name="checkmark.circle.fill"
-                size={22}
-                color="#FFFFFF"
-              />
-              <AppText style={styles.buttonText}>
-                {canComplete ? 'Mark as Complete' : 'Already Completed Today'}
-              </AppText>
-            </>
-          )}
-        </TouchableOpacity>
-      )}
+      {/* Actions */}
+      <View style={styles.actions}>
+        {!isCompleted ? (
+          <TouchableOpacity
+            onPress={onComplete}
+            disabled={isCompleting}
+            style={[styles.completeButton, { backgroundColor: colors.accent }]}
+            activeOpacity={0.8}
+          >
+            <UiIconSymbol name="checkmark.circle.fill" size={22} color="#FFFFFF" />
+            <AppText style={styles.buttonText}>
+              {isCompleting ? 'Completing...' : 'Mark Complete'}
+            </AppText>
+          </TouchableOpacity>
+        ) : canMint && onMint ? (
+          <TouchableOpacity
+            onPress={onMint}
+            disabled={isMinting}
+            style={[styles.mintButton, { backgroundColor: colors.accent }]}
+            activeOpacity={0.8}
+          >
+            <UiIconSymbol name="trophy.fill" size={20} color="#FFFFFF" />
+            <AppText style={styles.buttonText}>
+              {isMinting ? 'Minting...' : `Mint Badge - ${formatMintFee(challenge.mintFee)}`}
+            </AppText>
+          </TouchableOpacity>
+        ) : null}
+      </View>
     </View>
   )
 }
@@ -137,8 +142,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 12,
   },
-  dayBadge: {
+  dayInfo: {
     flexDirection: 'row',
     alignItems: 'baseline',
     gap: 6,
@@ -152,7 +158,8 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: '800',
   },
-  todayBadge: {
+  headerRight: {},
+  statusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
@@ -160,26 +167,19 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 20,
   },
-  todayText: {
-    fontSize: 12,
+  statusText: {
+    fontSize: 11,
     fontWeight: '700',
     letterSpacing: 0.5,
   },
-  completedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-  },
-  completedText: {
-    fontSize: 12,
+  title: {
+    fontSize: 20,
     fontWeight: '700',
-    letterSpacing: 0.5,
+    marginBottom: 8,
   },
-  taskContent: {
-    marginTop: 20,
+  task: {
+    fontSize: 16,
+    lineHeight: 24,
     marginBottom: 16,
   },
   tipSection: {
@@ -195,7 +195,16 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     flex: 1,
   },
+  actions: {},
   completeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    paddingVertical: 16,
+    borderRadius: 14,
+  },
+  mintButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',

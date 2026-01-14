@@ -1,6 +1,6 @@
 /**
  * Badge Minting Hook
- * Handles the mint fee payment for challenge badges
+ * Handles the mint fee payment for daily challenge badges
  *
  * For production, integrate with Metaplex or compressed NFTs
  * Currently: Processes mint fee payment to treasury
@@ -8,8 +8,8 @@
 
 import { createTransaction } from '@/components/account/create-transaction'
 import { useGetBalanceInvalidate } from '@/components/account/use-get-balance'
-import { getChallengeById } from '@/constants/challenges'
-import { BadgeMetadata, Challenge, MintedBadge } from '@/types/challenges'
+import { getDayChallenge, getMintFeeForDay } from '@/constants/challenges'
+import { BadgeMetadata, DailyChallenge, MintedBadge } from '@/types/challenges'
 import { PublicKey, TransactionSignature } from '@solana/web3.js'
 import { useMutation } from '@tanstack/react-query'
 import { useMobileWallet } from '@wallet-ui/react-native-web3js'
@@ -17,7 +17,6 @@ import { useMobileWallet } from '@wallet-ui/react-native-web3js'
 // Treasury wallet address - replace with your actual wallet
 // This is where mint fees are collected
 export const TREASURY_WALLET = new PublicKey(
-  // TODO: Replace with actual treasury wallet
   'd29KQE5Gw3dY6qDEvFvmfp4bCr4kUWZm4EnGojUfiZb' // Example devnet wallet
 )
 
@@ -26,7 +25,7 @@ const APP_SYMBOL = '21S'
 
 // Generate badge metadata (Metaplex standard)
 function generateBadgeMetadata(
-  challenge: Challenge,
+  challenge: DailyChallenge,
   walletAddress: string
 ): BadgeMetadata {
   return {
@@ -35,10 +34,8 @@ function generateBadgeMetadata(
     description: challenge.badge.description,
     image: `https://21-s.app/badges/${challenge.badge.image}.png`, // Placeholder
     attributes: [
-      { trait_type: 'Challenge', value: challenge.title },
-      { trait_type: 'Tier', value: challenge.tier },
-      { trait_type: 'Level', value: challenge.id },
-      { trait_type: 'Rarity', value: challenge.badge.rarity },
+      { trait_type: 'Day', value: challenge.day },
+      { trait_type: 'Title', value: challenge.title },
       { trait_type: 'Mint Fee', value: `${challenge.mintFee} SOL` },
       { trait_type: 'Completed By', value: walletAddress },
       { trait_type: 'Completed Date', value: new Date().toISOString().split('T')[0] },
@@ -62,7 +59,7 @@ function generateBadgeMetadata(
 }
 
 export interface MintBadgeInput {
-  challengeId: number
+  day: number
 }
 
 export interface MintBadgeResult {
@@ -77,18 +74,20 @@ export function useMintBadge({ address }: { address: PublicKey }) {
   return useMutation({
     mutationKey: ['mint-badge', { endpoint: connection.rpcEndpoint, address }],
     mutationFn: async (input: MintBadgeInput): Promise<MintBadgeResult> => {
-      const challenge = getChallengeById(input.challengeId)
+      const challenge = getDayChallenge(input.day)
 
       if (!challenge) {
-        throw new Error(`Challenge ${input.challengeId} not found`)
+        throw new Error(`Day ${input.day} challenge not found`)
       }
+
+      const mintFee = getMintFeeForDay(input.day)
 
       // Create transaction to pay mint fee to treasury
       const { transaction, latestBlockhash, minContextSlot } =
         await createTransaction({
           publicKey: address,
           destination: TREASURY_WALLET,
-          amount: challenge.mintFee,
+          amount: mintFee,
           connection,
         })
 
@@ -106,8 +105,8 @@ export function useMintBadge({ address }: { address: PublicKey }) {
 
       // Create badge record
       const badge: MintedBadge = {
-        challengeId: input.challengeId,
-        mintAddress: `badge_${input.challengeId}_${Date.now()}`, // Placeholder - would be actual NFT mint address
+        day: input.day,
+        mintAddress: `badge_day${input.day}_${Date.now()}`, // Placeholder - would be actual NFT mint address
         transactionSignature: signature,
         mintedAt: new Date().toISOString(),
         metadata,
@@ -135,5 +134,5 @@ export function canAffordMint(
 
 // Format mint fee for display
 export function formatMintFee(mintFee: number): string {
-  return `${mintFee.toFixed(3)} SOL`
+  return `${mintFee.toFixed(4)} SOL`
 }

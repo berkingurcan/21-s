@@ -1,156 +1,166 @@
 /**
- * Challenge Card Component
- * Displays a challenge with its progress and status
+ * Day Card Component
+ * Displays a day card for the grid view
  */
 
+import { AppText } from '@/components/app-text'
+import { UiIconSymbol } from '@/components/ui/ui-icon-symbol'
+import { Colors } from '@/constants/colors'
+import { DailyChallenge, DayProgress } from '@/types/challenges'
 import React from 'react'
 import {
-  View,
   StyleSheet,
   TouchableOpacity,
+  View,
   type ViewStyle,
 } from 'react-native'
-import { AppText } from '@/components/app-text'
-import { Colors, TierColors } from '@/constants/colors'
-import { Challenge, ChallengeProgress } from '@/types/challenges'
-import { UiIconSymbol } from '@/components/ui/ui-icon-symbol'
+import { formatMintFee } from './use-mint-badge'
 
-interface ChallengeCardProps {
-  challenge: Challenge
-  progress?: ChallengeProgress | null
-  status: 'locked' | 'available' | 'active' | 'completed'
+interface DayCardProps {
+  challenge: DailyChallenge
+  progress?: DayProgress | null
+  isCurrent?: boolean
   onPress?: () => void
   style?: ViewStyle
-  compact?: boolean
 }
 
-export function ChallengeCard({
+export function DayCard({
   challenge,
   progress,
-  status,
+  isCurrent = false,
   onPress,
   style,
-  compact = false,
-}: ChallengeCardProps) {
+}: DayCardProps) {
   const colors = Colors.dark
-  const tierColor = TierColors[challenge.tier]
 
-  const completedDays = progress?.daysCompleted.length || 0
-  const progressPercent = Math.round((completedDays / 21) * 100)
-
-  const isLocked = status === 'locked'
-  const isActive = status === 'active'
-  const isCompleted = status === 'completed'
+  const isCompleted = progress?.completed ?? false
+  const isMinted = progress?.badgeMinted ?? false
 
   return (
     <TouchableOpacity
       onPress={onPress}
-      disabled={isLocked}
       activeOpacity={0.7}
       style={[
         styles.container,
         {
-          backgroundColor: colors.surface,
-          borderColor: isActive ? colors.accent : colors.border,
-          borderWidth: isActive ? 2 : 1,
-          opacity: isLocked ? 0.5 : 1,
+          backgroundColor: isCurrent
+            ? colors.accentGlow
+            : isCompleted
+              ? colors.successMuted
+              : colors.surface,
+          borderColor: isCurrent
+            ? colors.accent
+            : isCompleted
+              ? colors.success
+              : colors.border,
         },
         style,
       ]}
     >
       {/* Header */}
       <View style={styles.header}>
-        <View style={styles.titleRow}>
-          <View
-            style={[styles.tierBadge, { backgroundColor: tierColor + '20' }]}
-          >
-            <AppText style={[styles.tierText, { color: tierColor }]}>
-              {challenge.tier.toUpperCase()}
-            </AppText>
-          </View>
-          <AppText style={[styles.level, { color: colors.textMuted }]}>
-            #{challenge.id}
-          </AppText>
-        </View>
+        <AppText
+          style={[
+            styles.dayNumber,
+            {
+              color: isCurrent
+                ? colors.accent
+                : isCompleted
+                  ? colors.success
+                  : colors.text,
+            },
+          ]}
+        >
+          {challenge.day}
+        </AppText>
 
         {/* Status Icon */}
-        <View style={styles.statusIcon}>
-          {isLocked && (
-            <UiIconSymbol name="lock.fill" size={20} color={colors.textMuted} />
-          )}
-          {isCompleted && (
-            <UiIconSymbol
-              name="checkmark.circle.fill"
-              size={24}
-              color={colors.success}
-            />
-          )}
-          {isActive && (
-            <UiIconSymbol name="flame.fill" size={24} color={colors.accent} />
-          )}
-        </View>
+        {isMinted ? (
+          <UiIconSymbol name="trophy.fill" size={14} color={colors.warning} />
+        ) : isCompleted ? (
+          <UiIconSymbol name="checkmark.circle.fill" size={14} color={colors.success} />
+        ) : isCurrent ? (
+          <UiIconSymbol name="flame.fill" size={14} color={colors.accent} />
+        ) : null}
       </View>
 
-      {/* Title & Description */}
-      <AppText type="subtitle" style={{ color: colors.text, marginTop: 8 }}>
+      {/* Title */}
+      <AppText
+        style={[styles.title, { color: colors.textMuted }]}
+        numberOfLines={2}
+      >
         {challenge.title}
       </AppText>
 
-      {!compact && (
+      {/* Mint Fee */}
+      <AppText style={[styles.mintFee, { color: colors.textSubtle }]}>
+        {formatMintFee(challenge.mintFee)}
+      </AppText>
+    </TouchableOpacity>
+  )
+}
+
+// Compact version for grid display
+export function DayCardCompact({
+  challenge,
+  progress,
+  isCurrent = false,
+  onPress,
+}: DayCardProps) {
+  const colors = Colors.dark
+
+  const isCompleted = progress?.completed ?? false
+  const isMinted = progress?.badgeMinted ?? false
+
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.7}
+      style={[
+        styles.compactContainer,
+        {
+          backgroundColor: isCurrent
+            ? colors.accentGlow
+            : isCompleted
+              ? colors.successMuted
+              : colors.surface,
+          borderColor: isCurrent
+            ? colors.accent
+            : isCompleted
+              ? colors.success
+              : colors.border,
+        },
+      ]}
+    >
+      <View style={styles.compactHeader}>
         <AppText
-          style={[styles.description, { color: colors.textMuted }]}
-          numberOfLines={2}
+          style={[
+            styles.compactDayNumber,
+            {
+              color: isCurrent
+                ? colors.accent
+                : isCompleted
+                  ? colors.success
+                  : colors.text,
+            },
+          ]}
         >
-          {challenge.description}
+          {challenge.day}
         </AppText>
-      )}
 
-      {/* Progress Bar (for active/completed) */}
-      {(isActive || isCompleted) && (
-        <View style={styles.progressSection}>
-          <View
-            style={[styles.progressBar, { backgroundColor: colors.border }]}
-          >
-            <View
-              style={[
-                styles.progressFill,
-                {
-                  width: `${progressPercent}%`,
-                  backgroundColor: isCompleted ? colors.success : colors.accent,
-                },
-              ]}
-            />
-          </View>
-          <AppText style={[styles.progressText, { color: colors.textMuted }]}>
-            {completedDays}/21 days
-          </AppText>
-        </View>
-      )}
-
-      {/* Footer */}
-      <View style={styles.footer}>
-        <View style={styles.badgePreview}>
-          <UiIconSymbol
-            name="trophy.fill"
-            size={16}
-            color={isCompleted ? colors.success : colors.textMuted}
-          />
-          <AppText
-            style={[
-              styles.badgeName,
-              { color: isCompleted ? colors.success : colors.textMuted },
-            ]}
-          >
-            {challenge.badge.name}
-          </AppText>
-        </View>
-
-        <View style={styles.mintFee}>
-          <AppText style={[styles.feeText, { color: tierColor }]}>
-            {challenge.mintFee} SOL
-          </AppText>
-        </View>
+        {isMinted ? (
+          <UiIconSymbol name="trophy.fill" size={12} color={colors.warning} />
+        ) : isCompleted ? (
+          <UiIconSymbol name="checkmark.circle.fill" size={12} color={colors.success} />
+        ) : null}
       </View>
+
+      <AppText
+        style={[styles.compactTitle, { color: colors.textMuted }]}
+        numberOfLines={1}
+      >
+        {challenge.title}
+      </AppText>
     </TouchableOpacity>
   )
 }
@@ -158,77 +168,48 @@ export function ChallengeCard({
 const styles = StyleSheet.create({
   container: {
     borderRadius: 16,
+    borderWidth: 1,
     padding: 16,
-    marginVertical: 6,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
+    marginBottom: 8,
   },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  dayNumber: {
+    fontSize: 24,
+    fontWeight: '800',
   },
-  tierBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-  },
-  tierText: {
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-  },
-  level: {
-    fontSize: 12,
+  title: {
+    fontSize: 13,
     fontWeight: '600',
+    marginBottom: 8,
   },
-  statusIcon: {},
-  description: {
-    fontSize: 14,
-    lineHeight: 20,
-    marginTop: 4,
-  },
-  progressSection: {
-    marginTop: 12,
-    gap: 6,
-  },
-  progressBar: {
-    height: 6,
-    borderRadius: 3,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    borderRadius: 3,
-  },
-  progressText: {
-    fontSize: 12,
+  mintFee: {
+    fontSize: 11,
     fontWeight: '500',
   },
-  footer: {
+  // Compact styles
+  compactContainer: {
+    width: '18.5%',
+    aspectRatio: 1,
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 8,
+    justifyContent: 'space-between',
+  },
+  compactHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.05)',
+    alignItems: 'flex-start',
   },
-  badgePreview: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
+  compactDayNumber: {
+    fontSize: 18,
+    fontWeight: '800',
   },
-  badgeName: {
-    fontSize: 13,
+  compactTitle: {
+    fontSize: 9,
     fontWeight: '500',
-  },
-  mintFee: {},
-  feeText: {
-    fontSize: 14,
-    fontWeight: '700',
   },
 })
