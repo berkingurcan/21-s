@@ -1,18 +1,15 @@
 /**
  * Mint Success Modal
- * Beautiful animated modal shown after successfully minting a badge
+ * Sigma aesthetic - minimal, bold, confident
  */
 
 import { AppText } from '@/components/app-text'
-import { UiIconSymbol } from '@/components/ui/ui-icon-symbol'
 import { Colors } from '@/constants/colors'
 import { DailyChallenge } from '@/types/challenges'
-import { LinearGradient } from 'expo-linear-gradient'
 import * as Linking from 'expo-linking'
 import React, { useEffect, useRef } from 'react'
 import {
     Animated,
-    Easing,
     Modal,
     Pressable,
     StyleSheet,
@@ -38,59 +35,27 @@ export function MintSuccessModal({
     network = 'devnet',
 }: MintSuccessModalProps) {
     const colors = Colors.dark
-    const scaleAnim = useRef(new Animated.Value(0)).current
-    const rotateAnim = useRef(new Animated.Value(0)).current
+    const scaleAnim = useRef(new Animated.Value(0.95)).current
     const fadeAnim = useRef(new Animated.Value(0)).current
-    const glowAnim = useRef(new Animated.Value(0)).current
 
     useEffect(() => {
         if (visible) {
-            // Reset animations
-            scaleAnim.setValue(0)
-            rotateAnim.setValue(0)
+            scaleAnim.setValue(0.95)
             fadeAnim.setValue(0)
-            glowAnim.setValue(0)
 
-            // Entrance animation sequence
             Animated.parallel([
                 Animated.spring(scaleAnim, {
                     toValue: 1,
-                    tension: 100,
-                    friction: 8,
+                    tension: 200,
+                    friction: 20,
                     useNativeDriver: true,
                 }),
                 Animated.timing(fadeAnim, {
                     toValue: 1,
-                    duration: 300,
+                    duration: 200,
                     useNativeDriver: true,
                 }),
             ]).start()
-
-            // Trophy rotation animation
-            Animated.timing(rotateAnim, {
-                toValue: 1,
-                duration: 800,
-                easing: Easing.elastic(1.5),
-                useNativeDriver: true,
-            }).start()
-
-            // Glow pulsing animation (loop)
-            Animated.loop(
-                Animated.sequence([
-                    Animated.timing(glowAnim, {
-                        toValue: 1,
-                        duration: 1200,
-                        easing: Easing.inOut(Easing.ease),
-                        useNativeDriver: true,
-                    }),
-                    Animated.timing(glowAnim, {
-                        toValue: 0,
-                        duration: 1200,
-                        easing: Easing.inOut(Easing.ease),
-                        useNativeDriver: true,
-                    }),
-                ])
-            ).start()
         }
     }, [visible])
 
@@ -106,16 +71,6 @@ export function MintSuccessModal({
         Linking.openURL(url)
     }
 
-    const rotate = rotateAnim.interpolate({
-        inputRange: [0, 0.5, 1],
-        outputRange: ['0deg', '-15deg', '0deg'],
-    })
-
-    const glowOpacity = glowAnim.interpolate({
-        inputRange: [0, 1],
-        outputRange: [0.4, 0.9],
-    })
-
     return (
         <Modal
             visible={visible}
@@ -123,7 +78,7 @@ export function MintSuccessModal({
             animationType="fade"
             onRequestClose={onClose}
         >
-            <Pressable style={styles.overlay} onPress={onClose}>
+            <Pressable style={[styles.overlay, { backgroundColor: colors.overlay }]} onPress={onClose}>
                 <Animated.View
                     style={[
                         styles.container,
@@ -133,40 +88,22 @@ export function MintSuccessModal({
                         },
                     ]}
                 >
-                    <Pressable style={[styles.card, { backgroundColor: colors.surface }]}>
-                        {/* Gradient border effect */}
-                        <LinearGradient
-                            colors={[colors.accent, colors.accentGlow, colors.accent]}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
-                            style={styles.gradientBorder}
-                        />
+                    <Pressable style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                        {/* Top accent line */}
+                        <View style={[styles.accentLine, { backgroundColor: colors.success }]} />
 
                         {/* Content */}
                         <View style={styles.content}>
-                            {/* Trophy with glow */}
-                            <View style={styles.trophyContainer}>
-                                <Animated.View
-                                    style={[
-                                        styles.trophyGlow,
-                                        {
-                                            backgroundColor: colors.gold,
-                                            opacity: glowOpacity,
-                                        },
-                                    ]}
-                                />
-                                <Animated.View style={{ transform: [{ rotate }] }}>
-                                    <UiIconSymbol
-                                        name="trophy.fill"
-                                        size={72}
-                                        color={colors.gold}
-                                    />
-                                </Animated.View>
+                            {/* Success badge */}
+                            <View style={[styles.successBadge, { backgroundColor: colors.successMuted }]}>
+                                <AppText style={[styles.successText, { color: colors.success }]}>
+                                    MINTED
+                                </AppText>
                             </View>
 
-                            {/* Success message */}
-                            <AppText style={[styles.successTitle, { color: colors.success }]}>
-                                Badge Minted!
+                            {/* Day indicator */}
+                            <AppText style={[styles.dayIndicator, { color: colors.textSubtle }]}>
+                                DAY {String(challenge.day).padStart(2, '0')}
                             </AppText>
 
                             {/* Badge name */}
@@ -174,25 +111,18 @@ export function MintSuccessModal({
                                 {challenge.badge.name}
                             </AppText>
 
-                            {/* Day badge */}
-                            <View style={[styles.dayBadge, { backgroundColor: colors.accentGlow }]}>
-                                <AppText style={[styles.dayText, { color: colors.accent }]}>
-                                    DAY {challenge.day}
-                                </AppText>
-                            </View>
-
                             {/* Description */}
                             <AppText style={[styles.description, { color: colors.textMuted }]}>
                                 {challenge.badge.description}
                             </AppText>
 
-                            {/* Mint address preview */}
-                            <View style={[styles.addressContainer, { backgroundColor: colors.surfaceAlt }]}>
+                            {/* Mint address */}
+                            <View style={[styles.addressContainer, { borderColor: colors.border }]}>
                                 <AppText style={[styles.addressLabel, { color: colors.textSubtle }]}>
-                                    NFT ADDRESS
+                                    NFT
                                 </AppText>
-                                <AppText style={[styles.address, { color: colors.text }]}>
-                                    {mintAddress.slice(0, 8)}...{mintAddress.slice(-8)}
+                                <AppText style={[styles.address, { color: colors.textMuted }]}>
+                                    {mintAddress.slice(0, 12)}...{mintAddress.slice(-12)}
                                 </AppText>
                             </View>
 
@@ -200,23 +130,21 @@ export function MintSuccessModal({
                             <View style={styles.buttons}>
                                 <TouchableOpacity
                                     onPress={handleViewNFT}
-                                    style={[styles.secondaryButton, { backgroundColor: colors.surfaceAlt }]}
-                                    activeOpacity={0.8}
+                                    style={[styles.linkButton, { borderColor: colors.border }]}
+                                    activeOpacity={0.7}
                                 >
-                                    <UiIconSymbol name="eye.fill" size={18} color={colors.accent} />
-                                    <AppText style={{ color: colors.accent, fontWeight: '600' }}>
-                                        View NFT
+                                    <AppText style={{ color: colors.textMuted, fontSize: 11, fontWeight: '600', letterSpacing: 1 }}>
+                                        VIEW NFT
                                     </AppText>
                                 </TouchableOpacity>
 
                                 <TouchableOpacity
                                     onPress={handleViewOnExplorer}
-                                    style={[styles.secondaryButton, { backgroundColor: colors.surfaceAlt }]}
-                                    activeOpacity={0.8}
+                                    style={[styles.linkButton, { borderColor: colors.border }]}
+                                    activeOpacity={0.7}
                                 >
-                                    <UiIconSymbol name="arrow.up.right.square" size={18} color={colors.accent} />
-                                    <AppText style={{ color: colors.accent, fontWeight: '600' }}>
-                                        Explorer
+                                    <AppText style={{ color: colors.textMuted, fontSize: 11, fontWeight: '600', letterSpacing: 1 }}>
+                                        EXPLORER
                                     </AppText>
                                 </TouchableOpacity>
                             </View>
@@ -224,10 +152,12 @@ export function MintSuccessModal({
                             {/* Done button */}
                             <TouchableOpacity
                                 onPress={onClose}
-                                style={[styles.doneButton, { backgroundColor: colors.accent }]}
-                                activeOpacity={0.8}
+                                style={[styles.doneButton, { backgroundColor: colors.text }]}
+                                activeOpacity={0.7}
                             >
-                                <AppText style={styles.doneButtonText}>Done</AppText>
+                                <AppText style={[styles.doneButtonText, { color: colors.background }]}>
+                                    CONTINUE
+                                </AppText>
                             </TouchableOpacity>
                         </View>
                     </Pressable>
@@ -240,111 +170,97 @@ export function MintSuccessModal({
 const styles = StyleSheet.create({
     overlay: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.85)',
         justifyContent: 'center',
         alignItems: 'center',
-        padding: 20,
+        padding: 24,
     },
     container: {
         width: '100%',
-        maxWidth: 340,
+        maxWidth: 320,
     },
     card: {
-        borderRadius: 28,
+        borderRadius: 2,
+        borderWidth: 1,
         overflow: 'hidden',
     },
-    gradientBorder: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        height: 4,
+    accentLine: {
+        height: 2,
     },
     content: {
-        padding: 28,
+        padding: 32,
         alignItems: 'center',
     },
-    trophyContainer: {
-        position: 'relative',
-        marginBottom: 20,
+    successBadge: {
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 2,
+        marginBottom: 24,
     },
-    trophyGlow: {
-        position: 'absolute',
-        top: -20,
-        left: -20,
-        right: -20,
-        bottom: -20,
-        borderRadius: 60,
-        filter: 'blur(20px)',
+    successText: {
+        fontSize: 10,
+        fontWeight: '700',
+        letterSpacing: 2,
     },
-    successTitle: {
-        fontSize: 28,
-        fontWeight: '800',
+    dayIndicator: {
+        fontSize: 11,
+        letterSpacing: 3,
         marginBottom: 8,
     },
     badgeName: {
-        fontSize: 18,
-        fontWeight: '700',
+        fontSize: 20,
+        fontWeight: '600',
         textAlign: 'center',
         marginBottom: 12,
-    },
-    dayBadge: {
-        paddingHorizontal: 16,
-        paddingVertical: 6,
-        borderRadius: 20,
-        marginBottom: 16,
-    },
-    dayText: {
-        fontSize: 12,
-        fontWeight: '800',
-        letterSpacing: 1,
+        letterSpacing: -0.5,
     },
     description: {
-        fontSize: 14,
+        fontSize: 13,
         lineHeight: 20,
         textAlign: 'center',
-        marginBottom: 20,
+        marginBottom: 24,
     },
     addressContainer: {
         width: '100%',
-        padding: 14,
-        borderRadius: 12,
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        borderTopWidth: 1,
+        borderBottomWidth: 1,
+        flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 20,
+        justifyContent: 'space-between',
+        marginBottom: 24,
     },
     addressLabel: {
         fontSize: 10,
         fontWeight: '700',
         letterSpacing: 1,
-        marginBottom: 4,
     },
     address: {
-        fontSize: 13,
+        fontSize: 11,
         fontFamily: 'monospace',
-        fontWeight: '500',
     },
     buttons: {
         flexDirection: 'row',
-        gap: 12,
-        marginBottom: 16,
-    },
-    secondaryButton: {
-        flexDirection: 'row',
-        alignItems: 'center',
         gap: 8,
+        marginBottom: 16,
+        width: '100%',
+    },
+    linkButton: {
+        flex: 1,
+        alignItems: 'center',
         paddingVertical: 12,
-        paddingHorizontal: 16,
-        borderRadius: 12,
+        borderRadius: 2,
+        borderWidth: 1,
     },
     doneButton: {
         width: '100%',
         alignItems: 'center',
-        paddingVertical: 16,
-        borderRadius: 14,
+        paddingVertical: 14,
+        borderRadius: 2,
     },
     doneButtonText: {
-        color: '#FFFFFF',
-        fontSize: 17,
+        fontSize: 12,
         fontWeight: '700',
+        letterSpacing: 1.5,
     },
 })

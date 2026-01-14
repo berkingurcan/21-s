@@ -204,7 +204,7 @@ export const DAILY_CHALLENGES: DailyChallenge[] = [
     day: 14,
     title: 'The Connector',
     task: 'Get contact info (social or number) from 1 person you just met',
-    tip: '"We should continue this - what\'s your Instagram?" Direct and simple.',
+    tip: '"We should continue this - what\'s your Instagram?"',
     mintFee: getMintFeeForDay(14),
     badge: {
       name: 'Day 14: First Connection',

@@ -253,11 +253,11 @@ export default function HomeScreen() {
 
         {/* Today's Challenge Card */}
         {currentDayChallenge && (
-          <View style={[styles.challengeCard, { backgroundColor: colors.surface }]}>
+          <View style={[styles.challengeCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <View style={styles.challengeHeader}>
               <View>
-                <AppText style={[styles.challengeLabel, { color: colors.accent }]}>
-                  TODAY'S CHALLENGE
+                <AppText style={[styles.challengeLabel, { color: colors.textSubtle }]}>
+                  TODAY
                 </AppText>
                 <AppText style={[styles.challengeTitle, { color: colors.text }]}>
                   {currentDayChallenge.title}
@@ -265,21 +265,20 @@ export default function HomeScreen() {
               </View>
               {isCurrentDayCompleted && (
                 <View style={[styles.completedBadge, { backgroundColor: colors.successMuted }]}>
-                  <UiIconSymbol name="checkmark.circle.fill" size={16} color={colors.success} />
-                  <AppText style={{ color: colors.success, fontWeight: '600', fontSize: 12 }}>
-                    Done
+                  <AppText style={{ color: colors.success, fontWeight: '700', fontSize: 10, letterSpacing: 1 }}>
+                    COMPLETE
                   </AppText>
                 </View>
               )}
             </View>
 
-            <AppText style={[styles.challengeTask, { color: colors.text }]}>
+            <AppText style={[styles.challengeTask, { color: colors.textMuted }]}>
               {currentDayChallenge.task}
             </AppText>
 
-            <View style={[styles.tipBox, { backgroundColor: colors.surfaceAlt }]}>
-              <UiIconSymbol name="lightbulb.fill" size={16} color={colors.tip} />
-              <AppText style={[styles.tipText, { color: colors.textMuted }]}>
+            {/* Minimal tip - just left border accent */}
+            <View style={[styles.tipBox, { borderLeftColor: colors.border }]}>
+              <AppText style={[styles.tipText, { color: colors.textSubtle }]}>
                 {currentDayChallenge.tip}
               </AppText>
             </View>
@@ -290,11 +289,10 @@ export default function HomeScreen() {
                 onPress={handleCompleteDay}
                 disabled={isCompleting}
                 style={[styles.completeButton, { backgroundColor: colors.accent }]}
-                activeOpacity={0.8}
+                activeOpacity={0.7}
               >
-                <UiIconSymbol name="checkmark.circle" size={22} color="#FFFFFF" />
                 <AppText style={styles.completeButtonText}>
-                  {isCompleting ? 'Completing...' : 'Mark Complete'}
+                  {isCompleting ? 'COMPLETING...' : 'MARK COMPLETE'}
                 </AppText>
               </TouchableOpacity>
             ) : (
@@ -302,20 +300,18 @@ export default function HomeScreen() {
                 onPress={handleUncompleteDay}
                 disabled={isCurrentDayMinted}
                 style={[styles.undoButton, {
-                  backgroundColor: isCurrentDayMinted ? colors.border : colors.surfaceAlt
+                  backgroundColor: 'transparent',
+                  borderColor: isCurrentDayMinted ? colors.border : colors.textSubtle,
                 }]}
-                activeOpacity={0.8}
+                activeOpacity={0.7}
               >
-                <UiIconSymbol
-                  name="arrow.uturn.backward"
-                  size={18}
-                  color={isCurrentDayMinted ? colors.textSubtle : colors.textMuted}
-                />
                 <AppText style={{
                   color: isCurrentDayMinted ? colors.textSubtle : colors.textMuted,
-                  fontWeight: '600'
+                  fontWeight: '600',
+                  fontSize: 12,
+                  letterSpacing: 1,
                 }}>
-                  {isCurrentDayMinted ? 'Minted - Cannot Undo' : 'Undo Completion'}
+                  {isCurrentDayMinted ? 'MINTED' : 'UNDO'}
                 </AppText>
               </TouchableOpacity>
             )}
@@ -325,29 +321,27 @@ export default function HomeScreen() {
         {/* Mint Badge Card */}
         {currentDayChallenge && (
           <View style={[styles.mintCard, {
-            backgroundColor: isCurrentDayCompleted && !isCurrentDayMinted
-              ? colors.accentGlow
-              : colors.surface,
+            backgroundColor: colors.surface,
             borderColor: isCurrentDayCompleted && !isCurrentDayMinted
               ? colors.accent
               : colors.border,
           }]}>
             <View style={styles.mintHeader}>
-              <UiIconSymbol
-                name="trophy.fill"
-                size={28}
-                color={isCurrentDayMinted ? colors.success : colors.gold}
-              />
+              <View style={[styles.mintIcon, { backgroundColor: isCurrentDayMinted ? colors.successMuted : colors.accentGlow }]}>
+                <AppText style={{ color: isCurrentDayMinted ? colors.success : colors.accent, fontSize: 16, fontWeight: '700' }}>
+                  NFT
+                </AppText>
+              </View>
               <View style={styles.mintInfo}>
                 <AppText style={[styles.mintBadgeName, { color: colors.text }]}>
                   {currentDayChallenge.badge.name}
                 </AppText>
-                <AppText style={{ color: colors.textMuted, fontSize: 13 }}>
+                <AppText style={{ color: colors.textSubtle, fontSize: 12, letterSpacing: 0.5 }}>
                   {isCurrentDayMinted
-                    ? 'Badge collected'
+                    ? 'COLLECTED'
                     : isCurrentDayCompleted
-                      ? 'Ready to mint'
-                      : 'Complete the task to unlock'}
+                      ? 'READY TO MINT'
+                      : 'COMPLETE TASK TO UNLOCK'}
                 </AppText>
               </View>
             </View>
@@ -357,16 +351,16 @@ export default function HomeScreen() {
                 onPress={handleMintBadge}
                 disabled={!isCurrentDayCompleted || isMinting}
                 style={[styles.mintButton, {
-                  backgroundColor: isCurrentDayCompleted ? colors.accent : colors.border
+                  backgroundColor: isCurrentDayCompleted ? colors.text : colors.border
                 }]}
-                activeOpacity={0.8}
+                activeOpacity={0.7}
               >
                 <AppText style={[styles.mintButtonText, {
-                  color: isCurrentDayCompleted ? '#FFFFFF' : colors.textSubtle
+                  color: isCurrentDayCompleted ? colors.background : colors.textSubtle
                 }]}>
                   {isMinting
-                    ? 'Minting...'
-                    : 'Mint Early NFT of The Challenge'}
+                    ? 'MINTING...'
+                    : 'MINT BADGE'}
                 </AppText>
               </TouchableOpacity>
             )}
@@ -473,97 +467,104 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 20,
   },
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 12,
   },
   logo: {
-    width: 36,
-    height: 36,
+    width: 32,
+    height: 32,
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: '#ECEDEE',
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    letterSpacing: -0.5,
   },
   headerRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 12,
   },
   infoButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+    width: 36,
+    height: 36,
+    borderRadius: 2,
     alignItems: 'center',
     justifyContent: 'center',
   },
   dayBadge: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 2,
   },
   dayBadgeText: {
     color: '#FFFFFF',
     fontWeight: '700',
-    fontSize: 14,
+    fontSize: 12,
+    letterSpacing: 1,
   },
   progressSection: {
     padding: 20,
-    borderRadius: 20,
+    borderRadius: 2,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.04)',
   },
   progressHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 16,
   },
   progressLabel: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '700',
-    letterSpacing: 1,
+    letterSpacing: 2,
   },
   progressPercent: {
-    fontSize: 16,
-    fontWeight: '700',
+    fontSize: 14,
+    fontWeight: '600',
   },
   progressBarBg: {
-    height: 10,
-    borderRadius: 5,
+    height: 2,
+    borderRadius: 0,
     overflow: 'hidden',
   },
   progressBarFill: {
     height: '100%',
-    borderRadius: 5,
+    borderRadius: 0,
   },
   statsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginTop: 16,
+    justifyContent: 'space-between',
+    marginTop: 20,
+    paddingTop: 20,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.04)',
   },
   statItem: {
     alignItems: 'center',
+    flex: 1,
   },
   statNumber: {
-    fontSize: 22,
-    fontWeight: '800',
+    fontSize: 28,
+    fontWeight: '300',
+    letterSpacing: -1,
   },
   statLabel: {
-    fontSize: 12,
-    marginTop: 2,
+    fontSize: 10,
+    marginTop: 4,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
   },
   challengeCard: {
     padding: 24,
-    borderRadius: 24,
+    borderRadius: 2,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.04)',
   },
   challengeHeader: {
     flexDirection: 'row',
@@ -572,124 +573,128 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   challengeLabel: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '700',
-    letterSpacing: 1,
-    marginBottom: 4,
+    letterSpacing: 2,
+    marginBottom: 8,
   },
   challengeTitle: {
-    fontSize: 24,
-    fontWeight: '800',
+    fontSize: 22,
+    fontWeight: '600',
+    letterSpacing: -0.5,
   },
   completedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 12,
+    borderRadius: 2,
   },
   challengeTask: {
-    fontSize: 17,
-    lineHeight: 26,
-    marginBottom: 16,
-  },
-  tipBox: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 10,
-    padding: 14,
-    borderRadius: 12,
+    fontSize: 15,
+    lineHeight: 24,
     marginBottom: 20,
   },
+  tipBox: {
+    borderLeftWidth: 2,
+    paddingLeft: 16,
+    paddingVertical: 4,
+    marginBottom: 24,
+  },
   tipText: {
-    flex: 1,
-    fontSize: 14,
+    fontSize: 13,
     lineHeight: 20,
+    fontStyle: 'italic',
   },
   completeButton: {
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
-    paddingVertical: 18,
-    borderRadius: 16,
+    paddingVertical: 16,
+    borderRadius: 2,
   },
   completeButtonText: {
     color: '#FFFFFF',
-    fontSize: 17,
+    fontSize: 13,
     fontWeight: '700',
+    letterSpacing: 1.5,
   },
   undoButton: {
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 14,
-    borderRadius: 12,
+    paddingVertical: 12,
+    borderRadius: 2,
+    borderWidth: 1,
   },
   mintCard: {
     padding: 20,
-    borderRadius: 20,
+    borderRadius: 2,
     borderWidth: 1,
     marginBottom: 16,
   },
   mintHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 14,
+    gap: 16,
     marginBottom: 16,
+  },
+  mintIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   mintInfo: {
     flex: 1,
   },
   mintBadgeName: {
-    fontSize: 16,
-    fontWeight: '700',
-    marginBottom: 2,
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 4,
+    letterSpacing: -0.3,
   },
   mintButton: {
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 14,
-    borderRadius: 12,
+    borderRadius: 2,
   },
   mintButtonText: {
-    fontSize: 16,
+    fontSize: 12,
     fontWeight: '700',
+    letterSpacing: 1,
   },
   dayNavigation: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
     marginBottom: 16,
   },
   navButton: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 2,
   },
   navButtonPlaceholder: {
-    width: 100,
+    width: 90,
   },
   allDaysButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 2,
   },
   completeCard: {
     padding: 32,
-    borderRadius: 24,
+    borderRadius: 2,
     alignItems: 'center',
   },
   completeTitle: {
-    fontSize: 24,
-    fontWeight: '800',
+    fontSize: 20,
+    fontWeight: '600',
     marginTop: 16,
     marginBottom: 8,
+    letterSpacing: -0.5,
   },
 })

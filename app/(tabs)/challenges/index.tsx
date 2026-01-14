@@ -115,7 +115,7 @@ export default function DaysScreen() {
               onPress={() => router.push('/(tabs)/home')}
               style={styles.backButton}
             >
-              <UiIconSymbol name="chevron.left" size={20} color={colors.textMuted} />
+              <UiIconSymbol name="chevron.left" size={18} color={colors.textMuted} />
               <AppText style={[styles.backText, { color: colors.textMuted }]}>
                 Today
               </AppText>
@@ -125,60 +125,62 @@ export default function DaysScreen() {
               style={[styles.infoButton, { backgroundColor: colors.surfaceAlt }]}
               activeOpacity={0.7}
             >
-              <UiIconSymbol name="info.circle" size={20} color={colors.textMuted} />
+              <UiIconSymbol name="info.circle" size={18} color={colors.textMuted} />
             </TouchableOpacity>
           </View>
-          <AppText type="title" style={{ color: colors.text, marginTop: 12 }}>
-            21 Days
+          <AppText style={[styles.pageTitle, { color: colors.text }]}>
+            21 DAYS
           </AppText>
-          <AppText style={[styles.subtitle, { color: colors.textMuted }]}>
-            Your confidence transformation journey
+          <AppText style={[styles.subtitle, { color: colors.textSubtle }]}>
+            Your transformation journey
           </AppText>
         </View>
 
         {/* Progress Summary */}
-        <View style={[styles.progressCard, { backgroundColor: colors.surface }]}>
+        <View style={[styles.progressCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <View style={styles.progressRow}>
             <View style={styles.progressStat}>
-              <AppText style={[styles.progressValue, { color: colors.success }]}>
+              <AppText style={[styles.progressValue, { color: colors.text }]}>
                 {stats.daysCompleted}
               </AppText>
-              <AppText style={[styles.progressLabel, { color: colors.textMuted }]}>
-                Completed
+              <AppText style={[styles.progressLabel, { color: colors.textSubtle }]}>
+                DONE
               </AppText>
             </View>
-            <View style={styles.progressStat}>
-              <AppText style={[styles.progressValue, { color: colors.accent }]}>
-                {stats.badgesMinted}
-              </AppText>
-              <AppText style={[styles.progressLabel, { color: colors.textMuted }]}>
-                Minted
-              </AppText>
-            </View>
+            <View style={[styles.progressDivider, { backgroundColor: colors.border }]} />
             <View style={styles.progressStat}>
               <AppText style={[styles.progressValue, { color: colors.text }]}>
+                {stats.badgesMinted}
+              </AppText>
+              <AppText style={[styles.progressLabel, { color: colors.textSubtle }]}>
+                MINTED
+              </AppText>
+            </View>
+            <View style={[styles.progressDivider, { backgroundColor: colors.border }]} />
+            <View style={styles.progressStat}>
+              <AppText style={[styles.progressValue, { color: colors.accent }]}>
                 {progressPercent}%
               </AppText>
-              <AppText style={[styles.progressLabel, { color: colors.textMuted }]}>
-                Progress
+              <AppText style={[styles.progressLabel, { color: colors.textSubtle }]}>
+                PROGRESS
               </AppText>
             </View>
           </View>
         </View>
 
-        {/* Legend */}
+        {/* Legend - Minimal */}
         <View style={styles.legend}>
           <View style={styles.legendItem}>
-            <View style={[styles.legendDot, { backgroundColor: colors.success }]} />
-            <AppText style={{ color: colors.textMuted, fontSize: 12 }}>Done</AppText>
+            <View style={[styles.legendIndicator, { backgroundColor: colors.success }]} />
+            <AppText style={{ color: colors.textSubtle, fontSize: 10, letterSpacing: 1 }}>DONE</AppText>
           </View>
           <View style={styles.legendItem}>
-            <UiIconSymbol name="trophy.fill" size={14} color={colors.gold} />
-            <AppText style={{ color: colors.textMuted, fontSize: 12 }}>Minted</AppText>
+            <View style={[styles.legendIndicator, { backgroundColor: colors.gold }]} />
+            <AppText style={{ color: colors.textSubtle, fontSize: 10, letterSpacing: 1 }}>MINTED</AppText>
           </View>
           <View style={styles.legendItem}>
-            <UiIconSymbol name="lock.fill" size={12} color={colors.textSubtle} />
-            <AppText style={{ color: colors.textMuted, fontSize: 12 }}>Locked</AppText>
+            <View style={[styles.legendIndicator, { backgroundColor: colors.textSubtle, opacity: 0.5 }]} />
+            <AppText style={{ color: colors.textSubtle, fontSize: 10, letterSpacing: 1 }}>LOCKED</AppText>
           </View>
         </View>
 
@@ -197,57 +199,37 @@ export default function DaysScreen() {
                 style={[
                   styles.dayCard,
                   {
-                    backgroundColor: isLocked
-                      ? colors.surfaceAlt
-                      : isCurrent
-                        ? colors.accentGlow
-                        : isCompleted
-                          ? colors.successMuted
-                          : colors.surface,
-                    borderColor: isLocked
-                      ? colors.border
-                      : isCurrent
-                        ? colors.accent
-                        : isCompleted
-                          ? colors.success
-                          : colors.border,
-                    opacity: isLocked ? 0.6 : 1,
+                    backgroundColor: colors.surface,
+                    borderColor: isCurrent
+                      ? colors.accent
+                      : isLocked
+                        ? 'transparent'
+                        : colors.border,
+                    opacity: isLocked ? 0.4 : 1,
                   },
                 ]}
                 activeOpacity={0.7}
               >
-                <View style={styles.dayCardHeader}>
-                  <AppText
-                    style={[
-                      styles.dayNumber,
-                      {
-                        color: isLocked
-                          ? colors.textSubtle
-                          : isCurrent
-                            ? colors.accent
-                            : isCompleted
-                              ? colors.success
-                              : colors.text,
-                      },
-                    ]}
-                  >
-                    {dayChallenge.day}
-                  </AppText>
-                  {isLocked && (
-                    <UiIconSymbol name="lock.fill" size={12} color={colors.textSubtle} />
-                  )}
-                  {!isLocked && isMinted && (
-                    <UiIconSymbol name="trophy.fill" size={14} color={colors.gold} />
-                  )}
-                  {!isLocked && !isMinted && isCompleted && (
-                    <UiIconSymbol name="checkmark.circle.fill" size={16} color={colors.success} />
-                  )}
-                </View>
+                {/* Status indicator line at top */}
+                {(isCompleted || isMinted) && (
+                  <View style={[
+                    styles.dayStatusLine,
+                    { backgroundColor: isMinted ? colors.gold : colors.success }
+                  ]} />
+                )}
                 <AppText
-                  style={[styles.dayTitle, { color: isLocked ? colors.textSubtle : colors.textMuted }]}
-                  numberOfLines={1}
+                  style={[
+                    styles.dayNumber,
+                    {
+                      color: isCurrent
+                        ? colors.accent
+                        : isLocked
+                          ? colors.textSubtle
+                          : colors.text,
+                    },
+                  ]}
                 >
-                  {dayChallenge.title}
+                  {String(dayChallenge.day).padStart(2, '0')}
                 </AppText>
               </TouchableOpacity>
             )
@@ -256,23 +238,23 @@ export default function DaysScreen() {
 
         {/* Week Labels */}
         <View style={styles.weekLabels}>
-          <View style={[styles.weekLabel, { backgroundColor: colors.surfaceAlt }]}>
-            <AppText style={{ color: colors.textMuted, fontSize: 12, fontWeight: '600' }}>
-              Week 1: Foundation
+          <View style={[styles.weekLabel, { borderLeftColor: colors.accent }]}>
+            <AppText style={{ color: colors.textMuted, fontSize: 11, fontWeight: '600', letterSpacing: 1 }}>
+              WEEK 1
             </AppText>
-            <AppText style={{ color: colors.textSubtle, fontSize: 11 }}>Days 1-7</AppText>
+            <AppText style={{ color: colors.textSubtle, fontSize: 10, letterSpacing: 0.5 }}>Foundation · 01-07</AppText>
           </View>
-          <View style={[styles.weekLabel, { backgroundColor: colors.surfaceAlt }]}>
-            <AppText style={{ color: colors.textMuted, fontSize: 12, fontWeight: '600' }}>
-              Week 2: Building
+          <View style={[styles.weekLabel, { borderLeftColor: colors.gold }]}>
+            <AppText style={{ color: colors.textMuted, fontSize: 11, fontWeight: '600', letterSpacing: 1 }}>
+              WEEK 2
             </AppText>
-            <AppText style={{ color: colors.textSubtle, fontSize: 11 }}>Days 8-14</AppText>
+            <AppText style={{ color: colors.textSubtle, fontSize: 10, letterSpacing: 0.5 }}>Building · 08-14</AppText>
           </View>
-          <View style={[styles.weekLabel, { backgroundColor: colors.surfaceAlt }]}>
-            <AppText style={{ color: colors.textMuted, fontSize: 12, fontWeight: '600' }}>
-              Week 3: Mastery
+          <View style={[styles.weekLabel, { borderLeftColor: colors.text }]}>
+            <AppText style={{ color: colors.textMuted, fontSize: 11, fontWeight: '600', letterSpacing: 1 }}>
+              WEEK 3
             </AppText>
-            <AppText style={{ color: colors.textSubtle, fontSize: 11 }}>Days 15-21</AppText>
+            <AppText style={{ color: colors.textSubtle, fontSize: 10, letterSpacing: 0.5 }}>Mastery · 15-21</AppText>
           </View>
         </View>
 
@@ -291,7 +273,7 @@ export default function DaysScreen() {
 
 const styles = StyleSheet.create({
   header: {
-    marginBottom: 16,
+    marginBottom: 24,
   },
   headerTop: {
     flexDirection: 'row',
@@ -305,93 +287,108 @@ const styles = StyleSheet.create({
     marginLeft: -4,
   },
   infoButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
+    width: 36,
+    height: 36,
+    borderRadius: 2,
     alignItems: 'center',
     justifyContent: 'center',
   },
   backText: {
-    fontSize: 15,
+    fontSize: 13,
     fontWeight: '500',
   },
+  pageTitle: {
+    fontSize: 28,
+    fontWeight: '300',
+    marginTop: 16,
+    letterSpacing: 4,
+  },
   subtitle: {
-    fontSize: 15,
-    marginTop: 6,
-    lineHeight: 22,
+    fontSize: 12,
+    marginTop: 8,
+    letterSpacing: 0.5,
   },
   progressCard: {
     padding: 20,
-    borderRadius: 16,
-    marginBottom: 16,
+    borderRadius: 2,
+    marginBottom: 20,
+    borderWidth: 1,
   },
   progressRow: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   progressStat: {
     alignItems: 'center',
+    flex: 1,
+  },
+  progressDivider: {
+    width: 1,
+    height: 32,
   },
   progressValue: {
-    fontSize: 28,
-    fontWeight: '800',
+    fontSize: 32,
+    fontWeight: '300',
+    letterSpacing: -1,
   },
   progressLabel: {
-    fontSize: 12,
+    fontSize: 9,
     marginTop: 4,
+    letterSpacing: 1.5,
   },
   legend: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 20,
-    marginBottom: 16,
+    gap: 24,
+    marginBottom: 24,
   },
   legendItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 8,
   },
-  legendDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
+  legendIndicator: {
+    width: 8,
+    height: 2,
   },
   daysGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'center',
-    gap: 10,
-    marginBottom: 20,
+    justifyContent: 'flex-start',
+    gap: 8,
+    marginBottom: 24,
   },
   dayCard: {
-    width: '18.5%',
+    width: '13%',
     aspectRatio: 1,
-    borderRadius: 12,
+    borderRadius: 2,
     borderWidth: 1,
-    padding: 8,
-    justifyContent: 'space-between',
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
   },
-  dayCardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+  dayStatusLine: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 2,
   },
   dayNumber: {
-    fontSize: 18,
-    fontWeight: '800',
-  },
-  dayTitle: {
-    fontSize: 9,
+    fontSize: 14,
     fontWeight: '500',
+    letterSpacing: -0.5,
   },
   weekLabels: {
-    gap: 10,
+    gap: 8,
   },
   weekLabel: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 14,
-    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderLeftWidth: 2,
   },
 })

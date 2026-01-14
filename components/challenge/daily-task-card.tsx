@@ -1,10 +1,9 @@
 /**
  * Daily Task Card Component
- * Shows a day's challenge task with completion and mint options
+ * Sigma aesthetic - minimal, bold, confident
  */
 
 import { AppText } from '@/components/app-text'
-import { UiIconSymbol } from '@/components/ui/ui-icon-symbol'
 import { Colors } from '@/constants/colors'
 import { DailyChallenge, DayProgress } from '@/types/challenges'
 import React from 'react'
@@ -40,62 +39,56 @@ export function DailyTaskCard({
         styles.container,
         {
           backgroundColor: colors.surface,
-          borderColor: isCompleted ? colors.success : colors.accent,
-          borderWidth: 2,
+          borderColor: colors.border,
         },
       ]}
     >
-      {/* Day Header */}
+      {/* Day Header - Minimal */}
       <View style={styles.header}>
         <View style={styles.dayInfo}>
-          <AppText style={[styles.dayLabel, { color: colors.textMuted }]}>
+          <AppText style={[styles.dayNumber, { color: colors.text }]}>
+            {String(challenge.day).padStart(2, '0')}
+          </AppText>
+          <View style={[styles.dayDivider, { backgroundColor: colors.border }]} />
+          <AppText style={[styles.dayLabel, { color: colors.textSubtle }]}>
             DAY
           </AppText>
-          <AppText style={[styles.dayNumber, { color: colors.text }]}>
-            {challenge.day}
-          </AppText>
         </View>
 
-        <View style={styles.headerRight}>
-          {isMinted ? (
-            <View style={[styles.statusBadge, { backgroundColor: colors.successMuted }]}>
-              <UiIconSymbol name="trophy.fill" size={16} color={colors.warning} />
-              <AppText style={[styles.statusText, { color: colors.success }]}>
-                MINTED
-              </AppText>
-            </View>
-          ) : isCompleted ? (
-            <View style={[styles.statusBadge, { backgroundColor: colors.successMuted }]}>
-              <UiIconSymbol name="checkmark.circle.fill" size={16} color={colors.success} />
-              <AppText style={[styles.statusText, { color: colors.success }]}>
-                DONE
-              </AppText>
-            </View>
-          ) : (
-            <View style={[styles.statusBadge, { backgroundColor: colors.accentGlow }]}>
-              <UiIconSymbol name="flame.fill" size={16} color={colors.accent} />
-              <AppText style={[styles.statusText, { color: colors.accent }]}>
-                TODAY
-              </AppText>
-            </View>
-          )}
-        </View>
+        {isMinted ? (
+          <View style={[styles.statusBadge, { backgroundColor: colors.successMuted }]}>
+            <AppText style={[styles.statusText, { color: colors.success }]}>
+              MINTED
+            </AppText>
+          </View>
+        ) : isCompleted ? (
+          <View style={[styles.statusBadge, { backgroundColor: colors.successMuted }]}>
+            <AppText style={[styles.statusText, { color: colors.success }]}>
+              COMPLETE
+            </AppText>
+          </View>
+        ) : (
+          <View style={[styles.statusBadge, { backgroundColor: colors.accentGlow }]}>
+            <AppText style={[styles.statusText, { color: colors.accent }]}>
+              ACTIVE
+            </AppText>
+          </View>
+        )}
       </View>
 
-      {/* Title */}
+      {/* Title - Bold */}
       <AppText style={[styles.title, { color: colors.text }]}>
         {challenge.title}
       </AppText>
 
       {/* Task Content */}
-      <AppText style={[styles.task, { color: colors.text }]}>
+      <AppText style={[styles.task, { color: colors.textMuted }]}>
         {challenge.task}
       </AppText>
 
-      {/* Tip Section */}
-      <View style={[styles.tipSection, { backgroundColor: colors.surfaceAlt }]}>
-        <UiIconSymbol name="lightbulb.fill" size={16} color={colors.warning} />
-        <AppText style={[styles.tipText, { color: colors.textMuted }]}>
+      {/* Tip Section - Minimal with left accent */}
+      <View style={[styles.tipSection, { borderLeftColor: colors.border }]}>
+        <AppText style={[styles.tipText, { color: colors.textSubtle }]}>
           {challenge.tip}
         </AppText>
       </View>
@@ -106,24 +99,22 @@ export function DailyTaskCard({
           <TouchableOpacity
             onPress={onComplete}
             disabled={isCompleting}
-            style={[styles.completeButton, { backgroundColor: colors.accent }]}
-            activeOpacity={0.8}
+            style={[styles.actionButton, { backgroundColor: colors.accent }]}
+            activeOpacity={0.7}
           >
-            <UiIconSymbol name="checkmark.circle.fill" size={22} color="#FFFFFF" />
             <AppText style={styles.buttonText}>
-              {isCompleting ? 'Completing...' : 'Mark Complete'}
+              {isCompleting ? 'COMPLETING...' : 'MARK COMPLETE'}
             </AppText>
           </TouchableOpacity>
         ) : canMint && onMint ? (
           <TouchableOpacity
             onPress={onMint}
             disabled={isMinting}
-            style={[styles.mintButton, { backgroundColor: colors.accent }]}
-            activeOpacity={0.8}
+            style={[styles.actionButton, { backgroundColor: colors.text }]}
+            activeOpacity={0.7}
           >
-            <UiIconSymbol name="trophy.fill" size={20} color="#FFFFFF" />
-            <AppText style={styles.buttonText}>
-              {isMinting ? 'Minting...' : `Mint Badge - ${formatMintFee(challenge.mintFee)}`}
+            <AppText style={[styles.buttonText, { color: colors.background }]}>
+              {isMinting ? 'MINTING...' : `MINT BADGE · ${formatMintFee(challenge.mintFee)}`}
             </AppText>
           </TouchableOpacity>
         ) : null}
@@ -134,87 +125,79 @@ export function DailyTaskCard({
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: 20,
-    padding: 20,
+    borderRadius: 2,
+    borderWidth: 1,
+    padding: 24,
     marginVertical: 8,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 20,
   },
   dayInfo: {
     flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: 6,
-  },
-  dayLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 1,
+    alignItems: 'center',
+    gap: 12,
   },
   dayNumber: {
-    fontSize: 32,
-    fontWeight: '800',
+    fontSize: 36,
+    fontWeight: '300',
+    letterSpacing: -1,
   },
-  headerRight: {},
+  dayDivider: {
+    width: 1,
+    height: 24,
+  },
+  dayLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    letterSpacing: 2,
+  },
   statusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 20,
+    borderRadius: 2,
   },
   statusText: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: '700',
-    letterSpacing: 0.5,
+    letterSpacing: 1.5,
   },
   title: {
-    fontSize: 20,
-    fontWeight: '700',
-    marginBottom: 8,
+    fontSize: 22,
+    fontWeight: '600',
+    marginBottom: 12,
+    letterSpacing: -0.5,
   },
   task: {
-    fontSize: 16,
+    fontSize: 15,
     lineHeight: 24,
-    marginBottom: 16,
+    marginBottom: 20,
   },
   tipSection: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 10,
-    padding: 14,
-    borderRadius: 12,
-    marginBottom: 16,
+    borderLeftWidth: 2,
+    paddingLeft: 16,
+    paddingVertical: 4,
+    marginBottom: 24,
   },
   tipText: {
-    fontSize: 14,
+    fontSize: 13,
     lineHeight: 20,
-    flex: 1,
+    fontStyle: 'italic',
   },
   actions: {},
-  completeButton: {
-    flexDirection: 'row',
+  actionButton: {
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
     paddingVertical: 16,
-    borderRadius: 14,
-  },
-  mintButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    paddingVertical: 16,
-    borderRadius: 14,
+    borderRadius: 2,
   },
   buttonText: {
     color: '#FFFFFF',
-    fontSize: 16,
+    fontSize: 13,
     fontWeight: '700',
+    letterSpacing: 1.5,
   },
 })

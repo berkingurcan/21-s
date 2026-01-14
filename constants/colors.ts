@@ -1,12 +1,11 @@
 /**
  * 21-S App Color Palette
- * Theme: "Midnight Discipline" - Dark & Sharp with Electric Blue
- * Designed for Sigma Male & Zen Aesthetic
- * Updated with 2025 UI Trends: Glassmorphism, subtle gradients
+ * Theme: "Midnight Discipline" - Dark & Sharp
+ * Sigma Male Aesthetic - Minimal, Bold, Confident
  */
 
-// Primary accent - Electric Blue
-const accentColor = '#3B82F6'
+// Primary accent - Cold Steel Blue
+const accentColor = '#4A90E2'
 
 // Color palette type
 interface ColorPalette {
@@ -77,83 +76,83 @@ interface ThemeConfig {
 export const Colors: { dark: ColorPalette; light: ColorPalette } = {
   // Dark theme (primary - app is dark-first)
   dark: {
-    // Backgrounds
-    background: '#0A0A0F', // Near black - main background
-    surface: '#12121A', // Dark navy - cards, surfaces
-    surfaceAlt: '#1A1A24', // Slightly lighter surface for contrast
-    surfaceGlass: 'rgba(18, 18, 26, 0.85)', // Glassmorphism effect
+    // Backgrounds - Deep, minimal
+    background: '#08080C', // True dark
+    surface: '#101014', // Card surfaces
+    surfaceAlt: '#18181E', // Elevated surfaces
+    surfaceGlass: 'rgba(16, 16, 20, 0.92)',
 
-    // Accent colors
+    // Accent colors - Cold, confident
     tint: accentColor,
     accent: accentColor,
-    accentMuted: '#1E3A5F', // Deep steel - subtle accent
-    accentGlow: 'rgba(59, 130, 246, 0.12)', // Glow effect for cards
-    accentSoft: 'rgba(59, 130, 246, 0.08)', // Softer accent for backgrounds
+    accentMuted: '#1A2D4A',
+    accentGlow: 'rgba(74, 144, 226, 0.10)',
+    accentSoft: 'rgba(74, 144, 226, 0.06)',
 
-    // Text
-    text: '#F0F1F2', // Primary text - slightly brighter
-    textMuted: '#9BA1A6', // Secondary text
-    textSubtle: '#6B7280', // Tertiary/placeholder text
+    // Text - High contrast hierarchy
+    text: '#FFFFFF',
+    textMuted: '#8A8F98',
+    textSubtle: '#5C6370',
 
-    // Borders
-    border: '#1E1E28', // Subtle borders
-    borderLight: 'rgba(255, 255, 255, 0.06)', // Light glass borders
-    borderAccent: '#3B82F6', // Accent borders
+    // Borders - Subtle, sharp
+    border: '#1C1C24',
+    borderLight: 'rgba(255, 255, 255, 0.04)',
+    borderAccent: accentColor,
 
-    // Status colors
-    success: '#10B981', // Emerald green - completed
-    successMuted: 'rgba(16, 185, 129, 0.12)',
-    gold: '#A78BFA', // Soft violet - badges, trophies (cooler than yellow)
-    goldMuted: 'rgba(167, 139, 250, 0.12)',
-    warning: '#F59E0B', // Amber - kept for actual warnings
-    warningMuted: 'rgba(245, 158, 11, 0.12)',
-    error: '#EF4444', // Red - errors
-    errorMuted: 'rgba(239, 68, 68, 0.12)',
-    tip: '#22D3EE', // Cyan - tips, hints
-    tipMuted: 'rgba(34, 211, 238, 0.12)',
+    // Status colors - Muted, sophisticated
+    success: '#22C55E',
+    successMuted: 'rgba(34, 197, 94, 0.10)',
+    gold: '#C084FC', // Purple for badges
+    goldMuted: 'rgba(192, 132, 252, 0.10)',
+    warning: '#F59E0B',
+    warningMuted: 'rgba(245, 158, 11, 0.10)',
+    error: '#EF4444',
+    errorMuted: 'rgba(239, 68, 68, 0.10)',
+    tip: '#8A8F98', // Muted - tips blend in
+    tipMuted: 'rgba(138, 143, 152, 0.08)',
 
     // Navigation
-    tabIconDefault: '#6B7280',
+    tabIconDefault: '#5C6370',
     tabIconSelected: accentColor,
-    icon: '#9BA1A6',
+    icon: '#8A8F98',
 
     // Special
-    overlay: 'rgba(10, 10, 15, 0.9)', // Modal overlays
-    overlayLight: 'rgba(10, 10, 15, 0.6)', // Lighter overlay
+    overlay: 'rgba(8, 8, 12, 0.95)',
+    overlayLight: 'rgba(8, 8, 12, 0.7)',
   },
 
-  // Light theme (fallback - same as dark for consistency)
+  // Light theme (same as dark - dark-first design)
   light: {
-    background: '#0A0A0F',
-    surface: '#12121A',
-    surfaceAlt: '#1A1A24',
-    surfaceGlass: 'rgba(18, 18, 26, 0.85)',
+    background: '#08080C',
+    surface: '#101014',
+    surfaceAlt: '#18181E',
+    surfaceGlass: 'rgba(16, 16, 20, 0.92)',
     tint: accentColor,
     accent: accentColor,
-    accentMuted: '#1E3A5F',
-    accentGlow: 'rgba(59, 130, 246, 0.12)',
-    accentSoft: 'rgba(59, 130, 246, 0.08)',
-    text: '#F0F1F2',
-    textMuted: '#9BA1A6',
-    textSubtle: '#6B7280',
-    border: '#1E1E28',
-    borderLight: 'rgba(255, 255, 255, 0.06)',
-    borderAccent: '#3B82F6',
-    success: '#10B981',
-    successMuted: 'rgba(16, 185, 129, 0.12)',
-    gold: '#A78BFA',
-    goldMuted: 'rgba(167, 139, 250, 0.12)',
+    accentMuted: '#1A2D4A',
+    accentGlow: 'rgba(74, 144, 226, 0.10)',
+    accentSoft: 'rgba(74, 144, 226, 0.06)',
+    text: '#FFFFFF',
+    textMuted: '#8A8F98',
+    textSubtle: '#5C6370',
+    border: '#1C1C24',
+    borderLight: 'rgba(255, 255, 255, 0.04)',
+    borderAccent: accentColor,
+    success: '#22C55E',
+    successMuted: 'rgba(34, 197, 94, 0.10)',
+    gold: '#C084FC',
+    goldMuted: 'rgba(192, 132, 252, 0.10)',
     warning: '#F59E0B',
-    warningMuted: 'rgba(245, 158, 11, 0.12)',
+    warningMuted: 'rgba(245, 158, 11, 0.10)',
     error: '#EF4444',
-    errorMuted: 'rgba(239, 68, 68, 0.12)',
-    tip: '#22D3EE',
-    tipMuted: 'rgba(34, 211, 238, 0.12)',
-    tabIconDefault: '#6B7280',
+    errorMuted: 'rgba(239, 68, 68, 0.10)',
+    tip: '#8A8F98',
+    tipMuted: 'rgba(138, 143, 152, 0.08)',
+    tabIconDefault: '#5C6370',
     tabIconSelected: accentColor,
-    icon: '#9BA1A6',
-    overlay: 'rgba(10, 10, 15, 0.9)',
-    overlayLight: 'rgba(10, 10, 15, 0.6)',
+    icon: '#8A8F98',
+    overlay: 'rgba(8, 8, 12, 0.95)',
+    overlayLight: 'rgba(8, 8, 12, 0.7)',
   },
 }
 
@@ -183,25 +182,24 @@ export const Gradients = {
   },
 }
 
-// Day progress colors (based on week progression)
+// Week progression - Monochromatic with intensity shift
 export const WeekColors = {
-  week1: '#3B82F6', // Blue - Foundation (Days 1-7)
-  week2: '#8B5CF6', // Purple - Building (Days 8-14)
-  week3: '#F59E0B', // Amber - Mastery (Days 15-21)
+  week1: '#4A90E2', // Steel Blue - Foundation
+  week2: '#7C3AED', // Violet - Building
+  week3: '#FFFFFF', // White - Mastery
 }
 
-// Kept for backwards compatibility - can be removed if not used elsewhere
 export const TierColors = {
-  beginner: '#3B82F6',
-  intermediate: '#8B5CF6',
-  advanced: '#F59E0B',
-  master: '#EF4444',
+  beginner: '#4A90E2',
+  intermediate: '#7C3AED',
+  advanced: '#A855F7',
+  master: '#FFFFFF',
 }
 
 export const BadgeColors = {
-  common: '#9BA1A6',
-  uncommon: '#3B82F6',
-  rare: '#8B5CF6',
-  epic: '#F59E0B',
-  legendary: '#EF4444',
+  common: '#5C6370',
+  uncommon: '#4A90E2',
+  rare: '#7C3AED',
+  epic: '#A855F7',
+  legendary: '#FFFFFF',
 }
