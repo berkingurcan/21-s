@@ -12,6 +12,7 @@ import { formatMintFee, useMintBadge } from '@/components/challenge/use-mint-bad
 import { ClusterNetwork } from '@/components/cluster/cluster-network'
 import { useCluster } from '@/components/cluster/cluster-provider'
 import { InfoModal } from '@/components/info/info-modal'
+import { useAlert } from '@/components/ui/custom-alert'
 import { UiIconSymbol } from '@/components/ui/ui-icon-symbol'
 import { getMintFeeForDay } from '@/constants/challenges'
 import { Colors } from '@/constants/colors'
@@ -19,7 +20,6 @@ import { useMobileWallet } from '@wallet-ui/react-native-web3js'
 import { useRouter } from 'expo-router'
 import React, { useState } from 'react'
 import {
-  Alert,
   Dimensions,
   Image,
   RefreshControl,
@@ -36,6 +36,7 @@ export default function HomeScreen() {
   const colors = Colors.dark
   const { account } = useMobileWallet()
   const { selectedCluster } = useCluster()
+  const { showAlert } = useAlert()
 
   const {
     currentDay,
@@ -85,7 +86,10 @@ export default function HomeScreen() {
   const handleUncompleteDay = async () => {
     if (!currentDayState || !currentDayState.progress.completed) return
     if (currentDayState.progress.badgeMinted) {
-      Alert.alert('Cannot Undo', 'This day\'s badge has been minted.')
+      showAlert({
+        title: 'Cannot Undo',
+        message: 'This day\'s badge has been minted.',
+      })
       return
     }
 
@@ -105,10 +109,10 @@ export default function HomeScreen() {
 
     // Check balance first - need mint fee + ~0.01 SOL for NFT creation fees
     if (solBalance < mintFee + 0.01) {
-      Alert.alert(
-        'Insufficient Balance',
-        `You need ${formatMintFee(mintFee)} + ~0.01 SOL network fees to mint this badge.`
-      )
+      showAlert({
+        title: 'Insufficient Balance',
+        message: `You need ${formatMintFee(mintFee)} + ~0.01 SOL for network fees.`,
+      })
       return
     }
 
@@ -125,7 +129,10 @@ export default function HomeScreen() {
       })
       setShowSuccessModal(true)
     } catch (error) {
-      Alert.alert('Minting Failed', 'Transaction was cancelled or failed. Please try again.')
+      showAlert({
+        title: 'Minting Failed',
+        message: 'Transaction was cancelled or failed.',
+      })
     } finally {
       setIsMinting(false)
     }
@@ -148,15 +155,15 @@ export default function HomeScreen() {
 
     if (!canProceedToNextDay()) {
       if (!isDayCompleted(currentDay)) {
-        Alert.alert(
-          'Complete Today First',
-          'Complete today\'s challenge before moving to the next day.'
-        )
+        showAlert({
+          title: 'Day Locked',
+          message: 'Complete today\'s challenge first.',
+        })
       } else if (!isDayMinted(currentDay)) {
-        Alert.alert(
-          'Mint Your Badge',
-          'Mint your badge for today before unlocking the next day.'
-        )
+        showAlert({
+          title: 'Mint Required',
+          message: 'Mint your badge to unlock the next day.',
+        })
       }
       return
     }

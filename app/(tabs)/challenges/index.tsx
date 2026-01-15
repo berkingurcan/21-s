@@ -7,12 +7,12 @@ import { AppPage } from '@/components/app-page'
 import { AppText } from '@/components/app-text'
 import { useChallenge } from '@/components/challenge/challenge-provider'
 import { InfoModal } from '@/components/info/info-modal'
+import { useAlert } from '@/components/ui/custom-alert'
 import { UiIconSymbol } from '@/components/ui/ui-icon-symbol'
 import { Colors } from '@/constants/colors'
 import { useRouter } from 'expo-router'
 import React, { useState } from 'react'
 import {
-  Alert,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -23,6 +23,7 @@ import {
 export default function DaysScreen() {
   const router = useRouter()
   const colors = Colors.dark
+  const { showAlert } = useAlert()
 
   const {
     allDays,
@@ -77,15 +78,15 @@ export default function DaysScreen() {
       }
 
       if (!isDayCompleted(blockedDay)) {
-        Alert.alert(
-          'Day Locked',
-          `Complete Day ${blockedDay} first before accessing Day ${day}.`
-        )
+        showAlert({
+          title: 'Day Locked',
+          message: `Complete Day ${String(blockedDay).padStart(2, '0')} first.`,
+        })
       } else {
-        Alert.alert(
-          'Day Locked',
-          `Mint your badge for Day ${blockedDay} to unlock Day ${day}.`
-        )
+        showAlert({
+          title: 'Mint Required',
+          message: `Mint badge for Day ${String(blockedDay).padStart(2, '0')} to continue.`,
+        })
       }
       return
     }

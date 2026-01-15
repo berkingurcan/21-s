@@ -1,7 +1,6 @@
 /**
  * Info Modal Component
- * Bottom sheet modal explaining the app's purpose and how to use it
- * Personal development motivation vibe
+ * Sigma aesthetic - minimal, bold, confident
  */
 
 import { AppText } from '@/components/app-text'
@@ -27,27 +26,27 @@ interface InfoModalProps {
 }
 
 interface InfoSectionProps {
-  icon: string
+  number: string
   title: string
   description: string
 }
 
-function InfoSection({ icon, title, description }: InfoSectionProps) {
+function InfoSection({ number, title, description }: InfoSectionProps) {
   const colors = Colors.dark
 
   return (
-    <View style={[styles.section, { backgroundColor: colors.surfaceAlt }]}>
-      <View style={[styles.sectionIcon, { backgroundColor: colors.accentGlow }]}>
-        <UiIconSymbol name={icon as any} size={24} color={colors.accent} />
-      </View>
-      <View style={styles.sectionContent}>
+    <View style={[styles.section, { borderLeftColor: colors.border }]}>
+      <View style={styles.sectionHeader}>
+        <AppText style={[styles.sectionNumber, { color: colors.textSubtle }]}>
+          {number}
+        </AppText>
         <AppText style={[styles.sectionTitle, { color: colors.text }]}>
           {title}
         </AppText>
-        <AppText style={[styles.sectionDescription, { color: colors.textMuted }]}>
-          {description}
-        </AppText>
       </View>
+      <AppText style={[styles.sectionDescription, { color: colors.textMuted }]}>
+        {description}
+      </AppText>
     </View>
   )
 }
@@ -65,13 +64,14 @@ export function InfoModal({ visible, onClose }: InfoModalProps) {
       statusBarTranslucent
     >
       <View style={styles.container}>
-        <Pressable style={styles.overlay} onPress={onClose} />
+        <Pressable style={[styles.overlay, { backgroundColor: colors.overlay }]} onPress={onClose} />
 
         <View
           style={[
             styles.sheet,
             {
               backgroundColor: colors.surface,
+              borderColor: colors.border,
               paddingBottom: insets.bottom + 20,
             },
           ]}
@@ -83,24 +83,19 @@ export function InfoModal({ visible, onClose }: InfoModalProps) {
 
           {/* Header */}
           <View style={styles.header}>
-            <View style={styles.headerTitleContainer}>
-              <View style={[styles.headerIcon, { backgroundColor: colors.accentGlow }]}>
-                <UiIconSymbol name="sparkles" size={28} color={colors.accent} />
-              </View>
-              <View>
-                <AppText style={[styles.headerTitle, { color: colors.text }]}>
-                  21-S Challenge
-                </AppText>
-                <AppText style={[styles.headerSubtitle, { color: colors.textMuted }]}>
-                  Transform Your Social Confidence
-                </AppText>
-              </View>
+            <View>
+              <AppText style={[styles.headerLabel, { color: colors.textSubtle }]}>
+                ABOUT
+              </AppText>
+              <AppText style={[styles.headerTitle, { color: colors.text }]}>
+                21-S Challenge
+              </AppText>
             </View>
             <TouchableOpacity
               onPress={onClose}
-              style={[styles.closeButton, { backgroundColor: colors.surfaceAlt }]}
+              style={[styles.closeButton, { borderColor: colors.border }]}
             >
-              <UiIconSymbol name="xmark" size={18} color={colors.textMuted} />
+              <UiIconSymbol name="xmark" size={16} color={colors.textMuted} />
             </TouchableOpacity>
           </View>
 
@@ -110,68 +105,64 @@ export function InfoModal({ visible, onClose }: InfoModalProps) {
             showsVerticalScrollIndicator={false}
           >
             {/* Hero Message */}
-            <View style={[styles.heroCard, { backgroundColor: colors.accentGlow }]}>
-              <AppText style={[styles.heroText, { color: colors.text }]}>
-                This is not just an app. This is your 21-day commitment to becoming
-                the version of yourself you've always envisioned. Every day, one small
-                step. Every step, unstoppable momentum.
+            <View style={[styles.heroCard, { borderColor: colors.border }]}>
+              <AppText style={[styles.heroText, { color: colors.textMuted }]}>
+                21 days. One commitment. Transform your social confidence through
+                progressive daily challenges. No shortcuts. No excuses.
               </AppText>
             </View>
 
             {/* The Purpose */}
             <InfoSection
-              icon="target"
-              title="The Purpose"
-              description="21-S is a structured social confidence program designed to systematically desensitize you to social anxiety. Through progressive daily challenges, you'll rewire your brain to see social interactions as opportunities, not threats."
+              number="01"
+              title="PURPOSE"
+              description="A structured program to systematically desensitize social anxiety. Rewire your brain to see interactions as opportunities."
             />
 
             {/* How It Works */}
             <InfoSection
-              icon="arrow.triangle.branch"
-              title="The Method"
-              description="Three weeks. Three phases. Foundation builds your comfort zone. Building expands your boundaries. Mastery makes confidence your default state. Each day builds on the last - no skipping, no shortcuts."
+              number="02"
+              title="METHOD"
+              description="Three weeks. Three phases. Foundation → Building → Mastery. Each day builds on the last. No skipping."
             />
 
             {/* The Commitment */}
             <InfoSection
-              icon="flame.fill"
-              title="The Commitment"
-              description="Complete the daily challenge. Mark it done. Mint your badge as proof of your progress. Each NFT badge is a permanent record of your transformation on the blockchain - a trophy you earned through action."
+              number="03"
+              title="COMMITMENT"
+              description="Complete the challenge. Mark done. Mint your NFT badge as permanent proof of progress on the blockchain."
             />
 
             {/* The Psychology */}
             <InfoSection
-              icon="brain.head.profile"
-              title="The Psychology"
-              description="Comfort zones only expand through deliberate discomfort. Each challenge is calibrated to push you just beyond your current edge - enough to grow, not enough to overwhelm. Trust the process."
+              number="04"
+              title="PSYCHOLOGY"
+              description="Comfort zones expand through deliberate discomfort. Each challenge pushes just beyond your edge."
             />
 
             {/* The Reward */}
             <InfoSection
-              icon="star.fill"
-              title="The Reward"
-              description="Beyond the badges, you gain something invaluable: proof to yourself that you can do hard things. In 21 days, approaching strangers won't be a challenge - it'll be second nature."
+              number="05"
+              title="REWARD"
+              description="Proof to yourself that you can do hard things. In 21 days, approaching strangers becomes second nature."
             />
 
-            {/* Motivational Footer */}
+            {/* Footer Quote */}
             <View style={[styles.footer, { borderTopColor: colors.border }]}>
-              <AppText style={[styles.footerQuote, { color: colors.accent }]}>
+              <AppText style={[styles.footerQuote, { color: colors.textSubtle }]}>
                 "Discipline is the bridge between goals and accomplishment."
-              </AppText>
-              <AppText style={[styles.footerText, { color: colors.textSubtle }]}>
-                Your journey starts with Day 1. No excuses. No delays.{'\n'}
-                Just you, becoming unstoppable.
               </AppText>
             </View>
 
             {/* Start Button */}
             <TouchableOpacity
               onPress={onClose}
-              style={[styles.startButton, { backgroundColor: colors.accent }]}
-              activeOpacity={0.8}
+              style={[styles.startButton, { backgroundColor: colors.text }]}
+              activeOpacity={0.7}
             >
-              <AppText style={styles.startButtonText}>Begin Your Journey</AppText>
-              <UiIconSymbol name="arrow.right" size={20} color="#FFFFFF" />
+              <AppText style={[styles.startButtonText, { color: colors.background }]}>
+                CLOSE
+              </AppText>
             </TouchableOpacity>
           </ScrollView>
         </View>
@@ -187,55 +178,46 @@ const styles = StyleSheet.create({
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
   },
   sheet: {
     maxHeight: SCREEN_HEIGHT * 0.85,
     minHeight: SCREEN_HEIGHT * 0.5,
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
+    borderTopLeftRadius: 2,
+    borderTopRightRadius: 2,
+    borderTopWidth: 1,
   },
   handleContainer: {
     alignItems: 'center',
-    paddingTop: 12,
+    paddingTop: 16,
     paddingBottom: 8,
   },
   handle: {
-    width: 40,
-    height: 4,
-    borderRadius: 2,
+    width: 32,
+    height: 2,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     paddingHorizontal: 24,
-    paddingBottom: 16,
+    paddingBottom: 20,
   },
-  headerTitleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-  },
-  headerIcon: {
-    width: 52,
-    height: 52,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
+  headerLabel: {
+    fontSize: 10,
+    fontWeight: '600',
+    letterSpacing: 2,
+    marginBottom: 4,
   },
   headerTitle: {
-    fontSize: 22,
-    fontWeight: '800',
-  },
-  headerSubtitle: {
-    fontSize: 13,
-    marginTop: 2,
+    fontSize: 24,
+    fontWeight: '300',
+    letterSpacing: -0.5,
   },
   closeButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 32,
+    height: 32,
+    borderRadius: 2,
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -247,73 +229,62 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   heroCard: {
-    padding: 20,
-    borderRadius: 16,
-    marginBottom: 20,
+    paddingVertical: 20,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    marginBottom: 24,
   },
   heroText: {
-    fontSize: 16,
-    lineHeight: 26,
-    fontWeight: '500',
-    fontStyle: 'italic',
-  },
-  section: {
-    flexDirection: 'row',
-    padding: 16,
-    borderRadius: 16,
-    marginBottom: 12,
-    gap: 14,
-  },
-  sectionIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  sectionContent: {
-    flex: 1,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    marginBottom: 6,
-  },
-  sectionDescription: {
     fontSize: 14,
     lineHeight: 22,
   },
+  section: {
+    paddingLeft: 16,
+    borderLeftWidth: 2,
+    marginBottom: 20,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 8,
+  },
+  sectionNumber: {
+    fontSize: 11,
+    fontWeight: '500',
+    letterSpacing: 1,
+  },
+  sectionTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 2,
+  },
+  sectionDescription: {
+    fontSize: 13,
+    lineHeight: 20,
+  },
   footer: {
-    paddingTop: 24,
+    paddingTop: 20,
     paddingBottom: 20,
-    marginTop: 12,
+    marginTop: 4,
     borderTopWidth: 1,
     alignItems: 'center',
   },
   footerQuote: {
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: 13,
     fontStyle: 'italic',
-    textAlign: 'center',
-    marginBottom: 12,
-  },
-  footerText: {
-    fontSize: 14,
-    lineHeight: 22,
     textAlign: 'center',
   },
   startButton: {
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 10,
-    paddingVertical: 18,
-    borderRadius: 16,
-    marginTop: 8,
+    paddingVertical: 14,
+    borderRadius: 2,
+    marginTop: 4,
   },
   startButtonText: {
-    color: '#FFFFFF',
-    fontSize: 17,
+    fontSize: 12,
     fontWeight: '700',
+    letterSpacing: 1.5,
   },
 })

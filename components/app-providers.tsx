@@ -5,6 +5,7 @@ import { AuthProvider } from '@/components/auth/auth-provider'
 import { ClusterProvider, useCluster } from '@/components/cluster/cluster-provider'
 import { ChallengeProvider } from '@/components/challenge/challenge-provider'
 import { AppTheme } from '@/components/app-theme'
+import { AlertProvider } from '@/components/ui/custom-alert'
 
 const queryClient = new QueryClient()
 export function AppProviders({ children }: PropsWithChildren) {
@@ -14,7 +15,9 @@ export function AppProviders({ children }: PropsWithChildren) {
         <ClusterProvider>
           <SolanaProvider>
             <AuthProvider>
-              <ChallengeProvider>{children}</ChallengeProvider>
+              <ChallengeProvider>
+                <AlertProvider>{children}</AlertProvider>
+              </ChallengeProvider>
             </AuthProvider>
           </SolanaProvider>
         </ClusterProvider>

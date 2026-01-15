@@ -1,20 +1,22 @@
 import { AppText } from '@/components/app-text'
 import { AppView } from '@/components/app-view'
 import { useChallenge } from '@/components/challenge/challenge-provider'
+import { useAlert } from '@/components/ui/custom-alert'
 import { UiIconSymbol } from '@/components/ui/ui-icon-symbol'
 import { Colors } from '@/constants/colors'
 import React from 'react'
-import { Alert, StyleSheet, TouchableOpacity } from 'react-native'
+import { StyleSheet, TouchableOpacity } from 'react-native'
 
 export function SettingsDebug() {
     const { resetProgress } = useChallenge()
+    const { showAlert } = useAlert()
     const colors = Colors.dark
 
     const handleReset = () => {
-        Alert.alert(
-            'Reset Progress',
-            'Are you sure you want to reset all progress? This cannot be undone.',
-            [
+        showAlert({
+            title: 'Reset Progress',
+            message: 'This will clear all data. Cannot be undone.',
+            buttons: [
                 {
                     text: 'Cancel',
                     style: 'cancel',
@@ -24,11 +26,14 @@ export function SettingsDebug() {
                     style: 'destructive',
                     onPress: async () => {
                         await resetProgress()
-                        Alert.alert('Success', 'Progress has been reset.')
+                        showAlert({
+                            title: 'Reset Complete',
+                            message: 'All progress has been cleared.',
+                        })
                     },
                 },
-            ]
-        )
+            ],
+        })
     }
 
     return (
@@ -58,18 +63,19 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: 16,
-        borderRadius: 12,
+        padding: 14,
+        borderRadius: 2,
         gap: 8,
     },
     buttonText: {
         color: 'white',
         fontWeight: '700',
-        fontSize: 16,
+        fontSize: 12,
+        letterSpacing: 1,
     },
     hint: {
-        fontSize: 13,
-        marginTop: 8,
+        fontSize: 12,
+        marginTop: 12,
         textAlign: 'center',
     },
 })
