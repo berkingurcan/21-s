@@ -367,7 +367,7 @@ export default function HomeScreen() {
                 }]}>
                   {isMinting
                     ? 'MINTING...'
-                    : 'MINT BADGE'}
+                    : 'MINT EARLY NFT'}
                 </AppText>
               </TouchableOpacity>
             )}
